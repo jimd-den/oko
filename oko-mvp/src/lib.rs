@@ -8,6 +8,7 @@ pub mod application;
 pub mod adapters;
 pub mod browser;
 pub mod domain;
+pub mod graphics;
 pub mod ipc;
 pub mod ports;
 

@@ -30,11 +30,13 @@ fn main() {
     let sessions = SessionService::new();
 
     // --- IPC host --------------------------------------------------------
-    let mut server = IpcServer::new(process, terminal, sessions, browser);
+    let workspace_root = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    let mut server = IpcServer::new(process, terminal, sessions, browser, &workspace_root);
 
     println!("oko-host v0.2.0 (slice 2: web-based desktop)");
     println!("ipc: stdio (typed, versioned, validated messages)");
     println!("engine: mock/dev (swappable for Blink via Chromium embedding)");
+    println!("workspace: {}", workspace_root.display());
 
     if let Err(e) = server.run() {
         eprintln!("ipc server stopped: {}", e);

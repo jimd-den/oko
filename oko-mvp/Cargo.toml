@@ -1,17 +1,34 @@
 [package]
 name = "oko-core"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 # Slice 1 MVP: headless core + terminal. Zero external dependencies so the
 # core builds and tests offline (SRD AT-001, AT-019). Platform adapters use
 # std only; a real PTY/nix integration is a later adapter swap behind the
 # same port trait.
+#
+# Slice 2: web-based desktop. Adds the Blink/V8/Skia browser engine adapter
+# behind the `blink` feature flag. Per SRD §2.1 / §5.1, Blink is NOT embedded
+# as a standalone library; it is provided through a supported Chromium
+# embedding arrangement. The Chromium source tree must be built separately
+# (approved upstream build process, pinned revision, verified checksum) and
+# linked via the adapter's embedder-interface declarations below.
+#
+# Default (no features): mock/dev engine only. Core builds offline with zero
+# external crates.
+# --features blink:  includes the blink adapter declarations (still requires
+#                    a separately built Chromium embedder to link).
+
 [[bin]]
 name = "oko-host"
 path = "src/main.rs"
 
 [dependencies]
+
+[features]
+default = []
+blink = []
 
 [dev-dependencies]
 

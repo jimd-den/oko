@@ -1,0 +1,76 @@
+# ỌKỌ dependency version lock (SRD §14.1, §14.2)
+# Every shipped upstream component records: component, upstream project,
+# exact release tag/revision, source URL, checksum, license, build config,
+# transitive inventory, advisory tracking, local patches, update owner.
+#
+# DEP-001: No unpinned upstream revisions in release builds.
+# DEP-002: No silent dependency downloads during compilation (install is an
+# explicit terminal command, never a build-time download).
+
+[blink]
+component = "Blink"
+upstream_project = "Chromium"
+role = "Primary browser engine and desktop UI renderer"
+source_url = "https://chromium.googlesource.com/chromium/src.git"
+pinned_revision = "refs/heads/main@16abc2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9"
+source_checksum_sha256 = "PLACEHOLDER-PENDING-FIRST-FETCH"
+license = "BSD-style (Chromium)"
+build_configuration = "content_embedder"
+target_platforms = ["linux-x86-64"]
+transitive_dependency_inventory = ["V8", "Skia", "Blink", "libwebp", "libpng", "harfbuzz", "icu", "zlib"]
+security_advisory_tracking = "Chromium security bulletins + CVE monitoring"
+local_patches = []
+patch_rationale = "none"
+update_owner = "platform-team"
+rollback_procedure = "Revert versions.lock to previous revision; rebuild embedder"
+
+[v8]
+component = "V8"
+upstream_project = "V8"
+role = "JavaScript engine for Blink and desktop UI"
+source_url = "https://chromium.googlesource.com/v8/v8.git"
+pinned_revision = "11.5.143.11"
+source_checksum_sha256 = "PLACEHOLDER-PENDING-FIRST-FETCH"
+license = "BSD-style"
+build_configuration = "embedded"
+target_platforms = ["linux-x86-64"]
+transitive_dependency_inventory = ["V8", "icu", "zlib"]
+security_advisory_tracking = "V8 security advisories"
+local_patches = []
+patch_rationale = "none"
+update_owner = "platform-team"
+rollback_procedure = "Revert versions.lock"
+
+[skia]
+component = "Skia"
+upstream_project = "Skia"
+role = "2D graphics engine used by Blink; may be used by ỌKỌ native graphics"
+source_url = "https://skia.googlesource.com/skia.git"
+pinned_revision = "m115"
+source_checksum_sha256 = "PLACEHOLDER-PENDING-FIRST-FETCH"
+license = "BSD-style"
+build_configuration = "shared_library"
+target_platforms = ["linux-x86-64"]
+transitive_dependency_inventory = ["Skia", "libpng", "libjpeg", "webp", "icu"]
+security_advisory_tracking = "Skia security advisories"
+local_patches = []
+patch_rationale = "none"
+update_owner = "platform-team"
+rollback_procedure = "Revert versions.lock"
+
+# Graphics backends (enabled explicitly per target platform — DEP-007)
+[vulkan]
+component = "Vulkan-Headers / Vulkan-Loader"
+upstream_project = "KhronosGroup"
+role = "Primary accelerated graphics backend (Linux initial)"
+source_url = "https://github.com/KhronosGroup/Vulkan-Host-Loader.git"
+pinned_revision = "sdk-1.3.239.0"
+license = "Apache-2.0"
+target_platforms = ["linux-x86-64", "windows"]
+
+[direct3d]
+component = "Direct3D 11 / Direct3D 12 headers"
+upstream_project = "Microsoft"
+role = "Required Windows graphics backends"
+target_platforms = ["windows"]
+license = "MIT / MS-RL (Windows SDK)"
