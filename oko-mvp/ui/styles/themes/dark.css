@@ -1,0 +1,37 @@
+/* ỌKỌ theme: dark (SRD CFG-004 — themes are user preferences, never capabilities) */
+/* This file is loaded as a theme; it must not grant system authority (CFG-008). */
+
+:root {
+  --bg: #0a0a0a;
+  --fg: #e8e8e8;
+  --muted: #8a8a8a;
+  --accent: #4da6ff;
+  --border: #2a2a2a;
+  --panel-bg: #121212;
+  --focus: #4da6ff;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+#top-bar {
+  background: var(--panel-bg);
+  border-bottom-color: var(--border);
+}
+
+.panel-header {
+  background: var(--bg);
+  border-bottom-color: var(--border);
+}
+
+#terminal-input {
+  background: var(--bg);
+  border-top-color: var(--border);
+}
+
+#status-bar {
+  background: var(--panel-bg);
+  border-top-color: var(--border);
+}

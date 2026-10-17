@@ -1,0 +1,36 @@
+[package]
+name = "oko-core"
+version = "0.1.0"
+edition = "2021"
+
+# Slice 1 MVP: headless core + terminal. Zero external dependencies so the
+# core builds and tests offline (SRD AT-001, AT-019). Platform adapters use
+# std only; a real PTY/nix integration is a later adapter swap behind the
+# same port trait.
+[[bin]]
+name = "oko-host"
+path = "src/main.rs"
+
+[dependencies]
+
+[dev-dependencies]
+
+[[test]]
+name = "domain_command_test"
+path = "tests/domain/command_test.rs"
+
+[[test]]
+name = "application_command_service_test"
+path = "tests/application/command_service_test.rs"
+
+[[test]]
+name = "at001_clean_architecture"
+path = "tests/acceptance/at001_clean_architecture.rs"
+
+[[test]]
+name = "at002_terminal_operation"
+path = "tests/acceptance/at002_terminal_operation.rs"
+
+[[test]]
+name = "at019_offline_core_tests"
+path = "tests/acceptance/at019_offline_core_tests.rs"

@@ -1,0 +1,177 @@
+/* ỌKỌ desktop UI — theme: dark (SRD CFG-004, UI-003, UI-005) */
+/* Theme files must never grant new system capabilities (SRD CFG-008). */
+
+:root {
+  --bg: #0a0a0a;
+  --fg: #e8e8e8;
+  --muted: #8a8a8a;
+  --accent: #4da6ff;
+  --border: #2a2a2a;
+  --panel-bg: #121212;
+  --focus: #4da6ff;
+  --danger: #ff6b6b;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Focus indicators — keyboard accessibility (UI-005) */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Top bar */
+#top-bar {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.brand { font-weight: bold; color: var(--accent); margin-right: 24px; letter-spacing: 0.05em; }
+.status { color: var(--muted); margin-right: auto; font-size: 12px; }
+.spacer { flex: 1; }
+
+#top-bar button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 4px 10px;
+  margin-left: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  border-radius: 3px;
+}
+#top-bar button:hover { background: var(--border); }
+
+/* Workspace — split panes (UI-003) */
+#workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 30px;
+  padding: 0 10px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.panel-title { font-size: 12px; color: var(--muted); }
+.panel-controls { display: flex; gap: 6px; }
+.panel-controls button {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 1;
+}
+.panel-controls button:hover { color: var(--fg); border-color: var(--border); }
+
+.panel-body { flex: 1; overflow: auto; position: relative; }
+
+/* Splitter (UI-003: resizable panes) */
+#splitter {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 6px;
+  background: transparent;
+  cursor: ew-resize;
+  user-select: none;
+}
+#splitter:hover, #splitter.dragging { background: var(--focus); }
+
+/* Terminal panel */
+#terminal-output {
+  padding: 12px;
+  font-family: inherit;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+#terminal-input {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 28px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 0 12px;
+  outline: none;
+  flex-shrink: 0;
+}
+
+/* Browser panel */
+.browser-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.browser-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  padding: 24px;
+  text-align: center;
+  border: 1px dashed var(--border);
+  margin: 12px;
+  border-radius: 6px;
+}
+
+/* Status bar */
+#status-bar {
+  display: flex;
+  height: 24px;
+  padding: 0 12px;
+  background: var(--panel-bg);
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+#status-bar span { margin-right: 20px; }
+
+/* Reduced motion (UI-005) */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

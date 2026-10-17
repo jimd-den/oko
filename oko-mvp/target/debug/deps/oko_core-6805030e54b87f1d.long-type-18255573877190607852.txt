@@ -1,0 +1,1 @@
+HashMap<CommandId, Box<(dyn for<'a, 'b, 'c> Fn(&'a command::Command, &'b CommandContext<'c>) -> Result<CommandResult, String> + Send + Sync + 'static)>>
