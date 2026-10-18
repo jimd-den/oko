@@ -51,3 +51,7 @@ path = "tests/acceptance/at002_terminal_operation.rs"
 [[test]]
 name = "at019_offline_core_tests"
 path = "tests/acceptance/at019_offline_core_tests.rs"
+
+[[test]]
+name = "at008_engine_lifecycle"
+path = "tests/acceptance/at008_engine_lifecycle.rs"

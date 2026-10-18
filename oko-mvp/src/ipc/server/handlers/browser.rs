@@ -11,6 +11,9 @@ pub fn handle_open<T: IpcTransport>(
     payload: &crate::ipc::json::JsonValue,
 ) -> Result<crate::ipc::json::JsonValue, String> {
     let url = payload_string(payload, "url")?;
+    if let Some(reason) = &server.engine_unavailable {
+        return Err(format!("browser engine unavailable: {}", reason));
+    }
     let config = BrowserConfig {
         profile: "default".into(),
         url: Some(url.clone()),
@@ -20,12 +23,25 @@ pub fn handle_open<T: IpcTransport>(
     Ok(object(vec![("url".into(), str(&url))]))
 }
 
+/// Report engine identity, version and state (SRD OBS-003, ENG-008).
+///
+/// `state` is `ready` or `unavailable`; an unavailable engine also carries the
+/// `reason`, so a caller can tell a missing engine from a working one instead
+/// of receiving a single ambiguous OK.
 pub fn handle_engine<T: IpcTransport>(server: &IpcServer<T>) -> Result<crate::ipc::json::JsonValue, String> {
-    Ok(object(vec![
+    let mut fields = vec![
         ("engine".into(), str(server.browser.engine_name())),
         ("version".into(), str(server.browser.engine_version())),
         ("experimental".into(), bool(server.browser.is_experimental())),
-    ]))
+    ];
+    match &server.engine_unavailable {
+        Some(reason) => {
+            fields.push(("state".into(), str("unavailable")));
+            fields.push(("reason".into(), str(reason)));
+        }
+        None => fields.push(("state".into(), str("ready"))),
+    }
+    Ok(object(fields))
 }
 
 pub fn handle_capabilities<T: IpcTransport>(server: &IpcServer<T>) -> Result<crate::ipc::json::JsonValue, String> {
@@ -71,6 +87,14 @@ mod tests {
         let result = handle_engine(&server).unwrap();
         let engine = crate::ipc::json::get(&result, "engine").and_then(crate::ipc::json::as_str).unwrap();
         assert_eq!(engine, "mock");
+    }
+
+    #[test]
+    fn handle_engine_reports_ready_state_before_any_failure() {
+        let server = test_server();
+        let result = handle_engine(&server).unwrap();
+        let state = crate::ipc::json::get(&result, "state").and_then(crate::ipc::json::as_str).unwrap();
+        assert_eq!(state, "ready");
     }
 
     #[test]

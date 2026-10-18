@@ -23,6 +23,10 @@ pub struct IpcServer<T: IpcTransport> {
     browser: Box<dyn BrowserEnginePort>,
     blink_installer: BlinkInstaller,
     desktop_mode: bool,
+    /// Why the browser engine is unusable, if it failed to initialize.
+    /// `None` means it initialized. The engine is an optional service, so this
+    /// is recorded rather than fatal (SRD ENG-004, ENG-008, §4.2).
+    engine_unavailable: Option<String>,
 }
 
 impl<T: IpcTransport> IpcServer<T> {
@@ -44,11 +48,21 @@ impl<T: IpcTransport> IpcServer<T> {
             browser,
             blink_installer,
             desktop_mode: false,
+            engine_unavailable: None,
         }
     }
 
+    /// Serve IPC messages until `host.shutdown` or end of input.
+    ///
+    /// Contract: the browser engine is an optional service. If it cannot
+    /// initialize, the host records why and keeps serving, because the terminal
+    /// core must not depend on the engine (SRD ENG-004, ENG-008, §4.2). The
+    /// failure is reported on `host.browser.engine`; no other engine is
+    /// substituted for the requested one.
     pub fn run(&mut self) -> Result<(), String> {
-        self.browser.initialize().map_err(|e| format!("{:?}", e))?;
+        if let Err(e) = self.browser.initialize() {
+            self.engine_unavailable = Some(format!("{:?}", e));
+        }
         loop {
             let msg = match self.bus.recv() {
                 Ok(m) => m,
@@ -69,7 +83,8 @@ impl<T: IpcTransport> IpcServer<T> {
             let response = dispatch::handle_message(self, &msg);
             let _ = self.bus.send(&response);
         }
-        self.browser.shutdown().map_err(|e| format!("{:?}", e))?;
+        // Best effort: a failing optional service must not block a clean exit.
+        let _ = self.browser.shutdown();
         Ok(())
     }
 }
