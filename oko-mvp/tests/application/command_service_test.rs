@@ -12,6 +12,10 @@ use oko_core::adapters::{
     linux_process::LinuxProcessAdapter,
 };
 
+mod builtin_commands;
+
+use self::builtin_commands::register_basic;
+
 fn full_policy() -> CapabilityPolicy {
     CapabilityPolicy::new()
         .with(Capability::ProcessSpawn)
@@ -33,74 +37,6 @@ fn make_ctx<'a>(
         terminal,
         sessions,
     }
-}
-
-fn register_basic(svc: &mut CommandService) {
-    svc.register("help", |_cmd, _ctx| {
-        Ok(oko_core::domain::command::CommandResult::Help(
-            "commands: help".into(),
-        ))
-    });
-    svc.register("status", |_cmd, _ctx| {
-        Ok(oko_core::domain::command::CommandResult::Ok(
-            "core: running | terminal: available | ui: deferred".into(),
-        ))
-    });
-    svc.register("app list", |_cmd, ctx| {
-        let sessions = ctx.sessions.list();
-        if sessions.is_empty() {
-            return Ok(oko_core::domain::command::CommandResult::Ok(
-                "no sessions".into(),
-            ));
-        }
-        Ok(oko_core::domain::command::CommandResult::Ok(
-            sessions
-                .iter()
-                .map(|s| format!("{:?}", s.id.0))
-                .collect::<Vec<_>>()
-                .join("\n"),
-        ))
-    });
-    svc.register("app launch", |cmd, ctx| {
-        let id = match cmd {
-            Command::AppLaunch { id } => id.clone(),
-            _ => {
-                return Ok(oko_core::domain::command::CommandResult::Error(
-                    "missing".into(),
-                ))
-            }
-        };
-        let req = oko_core::ports::process::SpawnRequest {
-            executable: "sh".into(),
-            args: vec!["-c".into(), format!("echo ok")],
-        };
-        let handle = ctx.process.spawn(req).unwrap();
-        let _ = ctx.process.stdout(handle).unwrap();
-        let session_id = oko_core::domain::session::SessionId(format!("app-{}", id));
-        ctx.sessions
-            .create_terminal(ctx.terminal, session_id.clone())
-            .unwrap();
-        Ok(oko_core::domain::command::CommandResult::Ok(format!(
-            "launched {}",
-            id
-        )))
-    });
-    svc.register("app stop", |cmd, ctx| {
-        let id = match cmd {
-            Command::AppStop { id } => id.clone(),
-            _ => {
-                return Ok(oko_core::domain::command::CommandResult::Error(
-                    "missing".into(),
-                ))
-            }
-        };
-        let session_id = oko_core::domain::session::SessionId(format!("app-{}", id));
-        ctx.sessions.stop(&session_id);
-        Ok(oko_core::domain::command::CommandResult::Ok(format!(
-            "stopped {}",
-            id
-        )))
-    });
 }
 
 #[test]
