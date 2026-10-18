@@ -15,7 +15,7 @@ use oko_core::browser::ports::engine::{
 };
 use oko_core::domain::capability::{Capability, CapabilityPolicy};
 use oko_core::ipc::message::Message;
-use oko_core::ipc::server::IpcServer;
+use oko_core::ipc::server::{Core, IpcServer};
 use oko_core::ipc::transport::MessageBus;
 use std::path::PathBuf;
 
@@ -130,8 +130,7 @@ pub fn run_host_with_policy(
 ) -> (ScriptedTransport, Result<(), String>) {
     let transport = ScriptedTransport::new(script);
     let bus = MessageBus::new(transport.clone());
-    let mut server = IpcServer::new(
-        bus,
+    let core = Core::new(
         Box::new(LinuxProcessAdapter::new()),
         Box::new(LinuxPtyAdapter::new()),
         SessionService::new(),
@@ -139,6 +138,7 @@ pub fn run_host_with_policy(
         engine,
         BlinkInstaller::new(&PathBuf::from("/nonexistent-oko-workspace")),
     );
+    let mut server = IpcServer::new(bus, core);
     let result = server.run();
     (transport, result)
 }

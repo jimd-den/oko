@@ -2,12 +2,9 @@
 //! Small composable function, single responsibility.
 
 use crate::ipc::json::object;
-use crate::ipc::server::IpcServer;
-use crate::ipc::transport::IpcTransport;
+use crate::ipc::server::Core;
 
-pub fn handle_desktop<T: IpcTransport>(
-    server: &mut IpcServer<T>,
-) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle_desktop(server: &mut Core) -> Result<crate::ipc::json::JsonValue, String> {
     server.desktop_mode = true;
     Ok(object(vec![("mode".into(), str("desktop"))]))
 }
@@ -32,8 +29,9 @@ mod tests {
         assert_eq!(mode, "desktop");
     }
 
-    fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
+    fn test_server() -> Core {
         use crate::application::session_service::SessionService;
+        use crate::browser::adapters::blink_install::BlinkInstaller;
         use crate::browser::adapters::mock::MockBrowserEngineAdapter;
         use crate::browser::ports::engine::BrowserEnginePort;
         use crate::domain::capability::{Capability, CapabilityPolicy};
@@ -51,6 +49,13 @@ mod tests {
         let root = temp_dir().join("oko-ui-test");
         let _ = std::fs::create_dir_all(root.join("toolchain"));
 
-        IpcServer::new_stdio(process, terminal, sessions, policy, browser, &root)
+        Core::new(
+            process,
+            terminal,
+            sessions,
+            policy,
+            browser,
+            BlinkInstaller::new(&root),
+        )
     }
 }

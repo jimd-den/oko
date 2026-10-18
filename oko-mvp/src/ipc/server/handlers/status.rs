@@ -2,12 +2,9 @@
 //! Small, composable, single responsibility.
 
 use crate::ipc::json::object;
-use crate::ipc::server::IpcServer;
-use crate::ipc::transport::IpcTransport;
+use crate::ipc::server::Core;
 
-pub fn handle<T: IpcTransport>(
-    server: &IpcServer<T>,
-) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle(server: &Core) -> Result<crate::ipc::json::JsonValue, String> {
     Ok(object(vec![
         ("core".into(), str("running")),
         ("terminal".into(), str("available")),
@@ -40,8 +37,9 @@ mod tests {
         assert_eq!(core, "running");
     }
 
-    fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
+    fn test_server() -> Core {
         use crate::application::session_service::SessionService;
+        use crate::browser::adapters::blink_install::BlinkInstaller;
         use crate::browser::adapters::mock::MockBrowserEngineAdapter;
         use crate::browser::ports::engine::BrowserEnginePort;
         use crate::domain::capability::{Capability, CapabilityPolicy};
@@ -59,6 +57,13 @@ mod tests {
         let root = temp_dir().join("oko-status-test");
         let _ = std::fs::create_dir_all(root.join("toolchain"));
 
-        IpcServer::new_stdio(process, terminal, sessions, policy, browser, &root)
+        Core::new(
+            process,
+            terminal,
+            sessions,
+            policy,
+            browser,
+            BlinkInstaller::new(&root),
+        )
     }
 }

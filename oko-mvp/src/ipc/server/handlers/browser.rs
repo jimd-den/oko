@@ -3,11 +3,10 @@
 
 use crate::browser::ports::engine::BrowserConfig;
 use crate::ipc::json::object;
-use crate::ipc::server::IpcServer;
-use crate::ipc::transport::IpcTransport;
+use crate::ipc::server::Core;
 
-pub fn handle_open<T: IpcTransport>(
-    server: &mut IpcServer<T>,
+pub fn handle_open(
+    server: &mut Core,
     payload: &crate::ipc::json::JsonValue,
 ) -> Result<crate::ipc::json::JsonValue, String> {
     let url = payload_string(payload, "url")?;
@@ -31,9 +30,7 @@ pub fn handle_open<T: IpcTransport>(
 /// `state` is `ready` or `unavailable`; an unavailable engine also carries the
 /// `reason`, so a caller can tell a missing engine from a working one instead
 /// of receiving a single ambiguous OK.
-pub fn handle_engine<T: IpcTransport>(
-    server: &IpcServer<T>,
-) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle_engine(server: &Core) -> Result<crate::ipc::json::JsonValue, String> {
     let mut fields = vec![
         ("engine".into(), str(server.browser.engine_name())),
         ("version".into(), str(server.browser.engine_version())),
@@ -57,9 +54,7 @@ pub fn handle_engine<T: IpcTransport>(
     Ok(object(fields))
 }
 
-pub fn handle_capabilities<T: IpcTransport>(
-    server: &IpcServer<T>,
-) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle_capabilities(server: &Core) -> Result<crate::ipc::json::JsonValue, String> {
     let caps = server.browser.capabilities();
     Ok(object(vec![
         ("supports_js".into(), bool(caps.supports_js)),
@@ -136,8 +131,9 @@ mod tests {
         crate::ipc::json::JsonValue::String(v.into())
     }
 
-    fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
+    fn test_server() -> Core {
         use crate::application::session_service::SessionService;
+        use crate::browser::adapters::blink_install::BlinkInstaller;
         use crate::browser::adapters::mock::MockBrowserEngineAdapter;
         use crate::browser::ports::engine::BrowserEnginePort;
         use crate::domain::capability::{Capability, CapabilityPolicy};
@@ -155,6 +151,13 @@ mod tests {
         let root = temp_dir().join("oko-browser-test");
         let _ = std::fs::create_dir_all(root.join("toolchain"));
 
-        IpcServer::new_stdio(process, terminal, sessions, policy, browser, &root)
+        Core::new(
+            process,
+            terminal,
+            sessions,
+            policy,
+            browser,
+            BlinkInstaller::new(&root),
+        )
     }
 }

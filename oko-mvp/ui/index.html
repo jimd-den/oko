@@ -3,31 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- The host replaces this marker with a per-session token. Every host API call
+     must carry it, so a page that is not served by this host cannot drive it
+     (SRD SEC-014, UI-009). -->
+<meta name="oko-token" content="__OKO_HOST_TOKEN__">
 <title>ỌKỌ — Terminal-First Desktop</title>
 <link rel="stylesheet" href="styles/themes/dark.css">
 <link rel="stylesheet" href="styles/main.css">
+<link rel="stylesheet" href="styles/panes.css">
 </head>
 <body>
   <div id="desktop" role="desktop" aria-label="ỌKỌ workspace">
-    <!-- Top bar: system status, launcher, clock -->
     <header id="top-bar" role="menubar" aria-label="System menu">
       <div class="brand" id="brand">ỌKỌ</div>
-      <div class="status" id="status" aria-live="polite">core: ready</div>
+      <div class="status" id="status" aria-live="polite">core: connecting…</div>
       <div class="spacer"></div>
       <div id="clock" aria-label="Current time">--:--:--</div>
       <button id="btn-launcher" aria-label="Open application launcher">Apps</button>
       <button id="btn-settings" aria-label="Open settings">Settings</button>
     </header>
 
-    <!-- Split workspace: terminal panel + browser panel -->
+    <!-- One workspace, two kinds of pane. A pane hosts a terminal or a web
+         document; both are driven through the same host API and capability
+         policy, which is what makes them interchangeable (SRD UI-002). -->
     <div id="workspace" role="region" aria-label="Workspace">
-      <!-- Terminal panel -->
       <section id="panel-terminal" class="panel" aria-label="Terminal">
         <div class="panel-header">
           <span class="panel-title">Terminal</span>
           <div class="panel-controls">
-            <button class="btn-split" aria-label="Split terminal">⟍</button>
-            <button class="btn-close" aria-label="Close panel">✕</button>
+            <button class="btn-split" id="btn-split-terminal" aria-label="Split terminal">⟍</button>
           </div>
         </div>
         <div class="panel-body">
@@ -36,36 +40,36 @@
         </div>
       </section>
 
-      <!-- Resizable splitter -->
       <div id="splitter" role="separator" aria-orientation="vertical" aria-valuenow="50" aria-label="Resize panels"></div>
 
-      <!-- Browser panel -->
       <section id="panel-browser" class="panel" aria-label="Browser">
         <div class="panel-header">
-          <span class="panel-title">Browser</span>
+          <span class="panel-title" id="browser-title">Web</span>
           <div class="panel-controls">
-            <button class="btn-refresh" aria-label="Refresh">⟳</button>
-            <button class="btn-close" aria-label="Close panel">✕</button>
+            <button class="btn-refresh" id="btn-home" aria-label="Show engine status">⌂</button>
+            <button class="btn-close" id="btn-open" aria-label="Open a URL">↗</button>
           </div>
         </div>
         <div class="panel-body">
           <div id="browser-view" class="browser-view" aria-label="Browser content">
             <div class="browser-placeholder">
-              <p>Browser engine: <span id="browser-engine">loading…</span></p>
-              <p id="browser-status">Connecting to host…</p>
+              <p>engine: <span id="browser-engine">loading…</span></p>
+              <p id="browser-status">connecting to host…</p>
+              <p class="hint">type <code>browser open &lt;url&gt;</code> in the terminal</p>
             </div>
           </div>
         </div>
       </section>
     </div>
 
-    <!-- Status bar -->
     <footer id="status-bar" role="status" aria-live="polite">
       <span id="cap-status">caps: none</span>
-      <span id="engine-status">engine: mock</span>
+      <span id="engine-status">engine: unknown</span>
     </footer>
   </div>
 
+  <script src="scripts/host-api.js"></script>
+  <script src="scripts/panes.js"></script>
   <script src="scripts/main.js"></script>
 </body>
 </html>

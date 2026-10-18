@@ -3,12 +3,9 @@
 
 use crate::domain::session::SessionId;
 use crate::ipc::json::object;
-use crate::ipc::server::IpcServer;
-use crate::ipc::transport::IpcTransport;
+use crate::ipc::server::Core;
 
-pub fn handle_create<T: IpcTransport>(
-    server: &mut IpcServer<T>,
-) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle_create(server: &mut Core) -> Result<crate::ipc::json::JsonValue, String> {
     let id = SessionId(format!("pty-{}", next_id()));
     server
         .sessions
@@ -21,8 +18,8 @@ pub fn handle_create<T: IpcTransport>(
 ///
 /// The desktop shell types through this route; the session lives in the host,
 /// so a UI reload does not end the shell (TERM-003).
-pub fn handle_write<T: IpcTransport>(
-    server: &mut IpcServer<T>,
+pub fn handle_write(
+    server: &mut Core,
     payload: &crate::ipc::json::JsonValue,
 ) -> Result<crate::ipc::json::JsonValue, String> {
     let session_id = payload_string(payload, "session_id")?;
@@ -42,8 +39,8 @@ pub fn handle_write<T: IpcTransport>(
     )]))
 }
 
-pub fn handle_read<T: IpcTransport>(
-    server: &mut IpcServer<T>,
+pub fn handle_read(
+    server: &mut Core,
     payload: &crate::ipc::json::JsonValue,
 ) -> Result<crate::ipc::json::JsonValue, String> {
     let session_id = payload_string(payload, "session_id")?;
@@ -142,8 +139,9 @@ mod tests {
         assert!(second > first);
     }
 
-    fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
+    fn test_server() -> Core {
         use crate::application::session_service::SessionService;
+        use crate::browser::adapters::blink_install::BlinkInstaller;
         use crate::browser::adapters::mock::MockBrowserEngineAdapter;
         use crate::browser::ports::engine::BrowserEnginePort;
         use crate::domain::capability::{Capability, CapabilityPolicy};
@@ -161,6 +159,13 @@ mod tests {
         let root = temp_dir().join("oko-terminal-test");
         let _ = std::fs::create_dir_all(root.join("toolchain"));
 
-        IpcServer::new_stdio(process, terminal, sessions, policy, browser, &root)
+        Core::new(
+            process,
+            terminal,
+            sessions,
+            policy,
+            browser,
+            BlinkInstaller::new(&root),
+        )
     }
 }

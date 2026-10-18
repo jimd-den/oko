@@ -3,12 +3,11 @@
 
 use crate::graphics::software::Framebuffer;
 use crate::ipc::json::object;
-use crate::ipc::server::IpcServer;
-use crate::ipc::transport::IpcTransport;
+use crate::ipc::server::Core;
 use std::fs;
 
-pub fn handle_demo<T: IpcTransport>(
-    _server: &mut IpcServer<T>,
+pub fn handle_demo(
+    _server: &mut Core,
     payload: &crate::ipc::json::JsonValue,
 ) -> Result<crate::ipc::json::JsonValue, String> {
     let message = payload_string(payload, "message").unwrap_or_else(|_| "oko".into());
@@ -31,9 +30,7 @@ pub fn handle_demo<T: IpcTransport>(
     ]))
 }
 
-pub fn handle_stats<T: IpcTransport>(
-    _server: &IpcServer<T>,
-) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle_stats(_server: &Core) -> Result<crate::ipc::json::JsonValue, String> {
     Ok(object(vec![
         (
             "stats".into(),
@@ -44,8 +41,8 @@ pub fn handle_stats<T: IpcTransport>(
     ]))
 }
 
-pub fn handle_capture<T: IpcTransport>(
-    _server: &mut IpcServer<T>,
+pub fn handle_capture(
+    _server: &mut Core,
     payload: &crate::ipc::json::JsonValue,
 ) -> Result<crate::ipc::json::JsonValue, String> {
     let path = payload_string(payload, "path")?;
@@ -121,8 +118,9 @@ mod tests {
         crate::ipc::json::JsonValue::String(v.into())
     }
 
-    fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
+    fn test_server() -> Core {
         use crate::application::session_service::SessionService;
+        use crate::browser::adapters::blink_install::BlinkInstaller;
         use crate::browser::adapters::mock::MockBrowserEngineAdapter;
         use crate::browser::ports::engine::BrowserEnginePort;
         use crate::domain::capability::{Capability, CapabilityPolicy};
@@ -140,6 +138,13 @@ mod tests {
         let root = temp_dir().join("oko-render-test");
         let _ = std::fs::create_dir_all(root.join("toolchain"));
 
-        IpcServer::new_stdio(process, terminal, sessions, policy, browser, &root)
+        Core::new(
+            process,
+            terminal,
+            sessions,
+            policy,
+            browser,
+            BlinkInstaller::new(&root),
+        )
     }
 }

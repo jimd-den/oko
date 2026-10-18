@@ -1,92 +1,104 @@
-//! Host entry point for the ỌKỌ MVP (web-based desktop).
+//! Host entry point for the ỌKỌ MVP.
 //!
-//! `oko-host` is an IPC server. The desktop UI (HTML/CSS/JavaScript, under
-//! `ui/`) connects over stdio IPC and calls the capability-checked host API.
-//! The core (domain/application) imports no UI, browser, or graphics code
-//! (SRD §4.2).
+//! `oko-host` owns the core: sessions, processes, capability policy, the
+//! browser engine and the terminal. It is reachable two ways, over the same
+//! typed, versioned messages:
 //!
-//! The browser engine is chosen by name at startup: `--engine <name>`, or the
-//! profile's `[browser] engine` when the flag is absent (SRD ENG-002). An
-//! engine this build cannot serve is reported as unavailable and the terminal
-//! core keeps working (SRD ENG-008, §4.2); it is never replaced by another.
+//!   --transport stdio   one message per line, for automation and the terminal
+//!   --transport http    the desktop shell, served on loopback for a browser
+//!                       engine to render and drive (SRD UI-001, UI-008)
+//!
+//! The engine is chosen by name: `--engine <name>`, or the profile's
+//! `[browser] engine` when the flag is absent (SRD ENG-002). An engine this
+//! build cannot serve is reported as unavailable and the core keeps working
+//! (SRD ENG-008, §4.2); it is never replaced by another.
 
+mod cli;
+
+use cli::Options;
 use oko_core::adapters::{linux_process::LinuxProcessAdapter, linux_pty::LinuxPtyAdapter};
 use oko_core::application::session_service::SessionService;
-use oko_core::browser::adapters::select;
+use oko_core::browser::adapters::{blink_install::BlinkInstaller, select};
 use oko_core::domain::capability::{Capability, CapabilityPolicy};
-use oko_core::domain::config::Config;
-use oko_core::ipc::server::IpcServer;
+use oko_core::ipc::http::HttpUiServer;
+use oko_core::ipc::server::{Core, IpcServer};
 use oko_core::ports::terminal::TerminalPort;
-
-/// Exit status for a bad command line, matching the command model (SRD §7.3).
-const USAGE_EXIT: i32 = 64;
+use std::path::{Path, PathBuf};
 
 fn main() {
-    let requested = match requested_engine(std::env::args().skip(1).collect()) {
-        Ok(name) => name,
+    let options = match cli::parse(std::env::args().skip(1).collect()) {
+        Ok(options) => options,
         Err(message) => {
             eprintln!("oko-host: {}", message);
-            eprintln!("usage: oko-host [--engine <name>]");
-            std::process::exit(USAGE_EXIT);
+            eprintln!("{}", cli::USAGE);
+            std::process::exit(cli::USAGE_EXIT);
         }
     };
-    let browser = select::engine_for(&requested);
 
-    // --- Adapters (platform implementations behind ports) ----------------
-    let process: Box<dyn oko_core::ports::process::ProcessPort> =
-        Box::new(LinuxProcessAdapter::new());
-    let terminal: Box<dyn TerminalPort> = Box::new(LinuxPtyAdapter::new());
+    let workspace_root = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    if options.install_engine {
+        std::process::exit(cli::install_engine(&workspace_root, &options.engine));
+    }
 
-    // --- Core services ---------------------------------------------------
-    let sessions = SessionService::new();
-
-    // --- Capability policy (SRD §8.3) -----------------------------------
-    let policy = CapabilityPolicy::new()
-        .with(Capability::ProcessSpawn)
-        .with(Capability::BrowserNavigate)
-        .with(Capability::GraphicsCreate)
-        .with(Capability::FilesystemRead)
-        .with(Capability::SystemConfigure)
-        .with(Capability::TerminalCreate);
-
-    // --- IPC host --------------------------------------------------------
-    let workspace_root = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
-    let mut server = IpcServer::new_stdio(
-        process,
-        terminal,
-        sessions,
-        policy,
-        browser,
-        &workspace_root,
+    let core = Core::new(
+        Box::new(LinuxProcessAdapter::new()),
+        Box::new(LinuxPtyAdapter::new()) as Box<dyn TerminalPort>,
+        SessionService::new(),
+        policy(),
+        select::engine_for(&options.engine),
+        BlinkInstaller::new(&workspace_root),
     );
 
-    println!("oko-host v0.2.0 (slice 2: web-based desktop)");
-    println!("ipc: stdio (typed, versioned, validated messages)");
-    println!("engine: {}", requested);
+    println!("oko-host v0.3.0 (slice 3: terminal and web panes in one desktop)");
+    println!("engine: {}", options.engine);
     println!(
         "engines in this build: {}",
         select::engine_names().join(", ")
     );
     println!("workspace: {}", workspace_root.display());
-    println!("engine state: ask the host API route host.browser.engine");
 
-    if let Err(e) = server.run() {
-        eprintln!("ipc server stopped: {}", e);
+    let outcome = match options.transport.as_str() {
+        "http" => serve_ui(core, &options, &workspace_root),
+        _ => {
+            println!("ipc: stdio (one typed, versioned message per line)");
+            IpcServer::new_stdio(core).run()
+        }
+    };
+
+    if let Err(e) = outcome {
+        eprintln!("oko-host stopped: {}", e);
         std::process::exit(1);
     }
-
     println!("oko-host stopped.");
-    std::process::exit(0);
 }
 
-/// The engine name to serve: `--engine <name>` overrides the profile's
-/// `[browser] engine` (SRD ENG-002, §11).
-fn requested_engine(args: Vec<String>) -> Result<String, String> {
-    match args.iter().position(|arg| arg == "--engine") {
-        Some(index) => args
-            .get(index + 1)
-            .cloned()
-            .ok_or_else(|| "--engine needs an engine name".to_string()),
-        None => Ok(Config::default().browser.engine),
+/// Serve the desktop shell on loopback for a browser engine to render.
+fn serve_ui(core: Core, options: &Options, workspace_root: &Path) -> Result<(), String> {
+    let server = HttpUiServer::bind(core, &options.ui_root, options.port)?;
+    let url = server.url();
+    println!("ui: {}", url);
+
+    let mut engine = if options.open_engine {
+        Some(cli::launch_engine(&options.engine, &url, workspace_root)?)
+    } else {
+        println!("open {} in any engine, or pass --open-engine", url);
+        None
+    };
+
+    let outcome = server.serve();
+    if let Some(process) = engine.as_mut() {
+        let _ = process.stop();
     }
+    outcome
+}
+
+/// The capabilities a desktop session holds (SRD §8.3).
+fn policy() -> CapabilityPolicy {
+    CapabilityPolicy::new()
+        .with(Capability::ProcessSpawn)
+        .with(Capability::BrowserNavigate)
+        .with(Capability::GraphicsCreate)
+        .with(Capability::FilesystemRead)
+        .with(Capability::SystemConfigure)
+        .with(Capability::TerminalCreate)
 }

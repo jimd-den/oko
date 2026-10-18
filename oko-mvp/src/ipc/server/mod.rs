@@ -1,6 +1,11 @@
-//! IPC server — main struct and message loop.
-//! Wires host API, terminal sessions, process adapter, browser engine,
-//! Blink installer and software renderer behind the message bus (SRD §4.2).
+//! The host core, and the stdio server that drives it.
+//!
+//! `Core` is everything the host can do, with no opinion about how a message
+//! arrives: process adapter, terminal adapter, sessions, capability policy,
+//! browser engine and the Blink installer. `IpcServer` drives it over a
+//! transport; `crate::ipc::http` drives the same core over loopback HTTP for the
+//! desktop UI. One core, more than one transport, the same typed and versioned
+//! messages (SRD §4.2).
 
 use crate::application::session_service::SessionService;
 use crate::browser::adapters::blink_install::BlinkInstaller;
@@ -9,14 +14,12 @@ use crate::domain::capability::CapabilityPolicy;
 use crate::ipc::transport::{IpcTransport, MessageBus};
 use crate::ports::process::ProcessPort;
 use crate::ports::terminal::TerminalPort;
-use std::path::Path;
 
 mod capabilities;
 mod dispatch;
 mod handlers;
 
-pub struct IpcServer<T: IpcTransport> {
-    bus: MessageBus<T>,
+pub struct Core {
     process: Box<dyn ProcessPort>,
     terminal: Box<dyn TerminalPort>,
     sessions: SessionService,
@@ -30,9 +33,8 @@ pub struct IpcServer<T: IpcTransport> {
     engine_unavailable: Option<String>,
 }
 
-impl<T: IpcTransport> IpcServer<T> {
+impl Core {
     pub fn new(
-        bus: MessageBus<T>,
         process: Box<dyn ProcessPort>,
         terminal: Box<dyn TerminalPort>,
         sessions: SessionService,
@@ -41,7 +43,6 @@ impl<T: IpcTransport> IpcServer<T> {
         blink_installer: BlinkInstaller,
     ) -> Self {
         Self {
-            bus,
             process,
             terminal,
             sessions,
@@ -53,17 +54,43 @@ impl<T: IpcTransport> IpcServer<T> {
         }
     }
 
-    /// Serve IPC messages until `host.shutdown` or end of input.
+    /// Start the optional services.
     ///
-    /// Contract: the browser engine is an optional service. If it cannot
-    /// initialize, the host records why and keeps serving, because the terminal
-    /// core must not depend on the engine (SRD ENG-004, ENG-008, §4.2). The
-    /// failure is reported on `host.browser.engine`; no other engine is
-    /// substituted for the requested one.
-    pub fn run(&mut self) -> Result<(), String> {
+    /// Contract: the browser engine is optional. If it cannot initialize, the
+    /// reason is recorded and the core keeps serving, because the terminal must
+    /// not depend on the engine (SRD ENG-004, ENG-008, §4.2). The failure is
+    /// reported on `host.browser.engine`; no other engine is substituted.
+    pub fn start(&mut self) {
         if let Err(e) = self.browser.initialize() {
             self.engine_unavailable = Some(format!("{:?}", e));
         }
+    }
+
+    /// Best effort: a failing optional service must not block a clean exit.
+    pub fn stop(&mut self) {
+        let _ = self.browser.shutdown();
+    }
+
+    /// Handle one message. The transport decides how it arrived; this decides
+    /// what it means.
+    pub fn handle(&mut self, msg: &crate::ipc::message::Message) -> crate::ipc::message::Message {
+        dispatch::handle_message(self, msg)
+    }
+}
+
+pub struct IpcServer<T: IpcTransport> {
+    bus: MessageBus<T>,
+    core: Core,
+}
+
+impl<T: IpcTransport> IpcServer<T> {
+    pub fn new(bus: MessageBus<T>, core: Core) -> Self {
+        Self { bus, core }
+    }
+
+    /// Serve IPC messages until `host.shutdown` or end of input.
+    pub fn run(&mut self) -> Result<(), String> {
+        self.core.start();
         loop {
             let msg = match self.bus.recv() {
                 Ok(m) => m,
@@ -86,34 +113,17 @@ impl<T: IpcTransport> IpcServer<T> {
                 ));
                 break;
             }
-            let response = dispatch::handle_message(self, &msg);
+            let response = self.core.handle(&msg);
             let _ = self.bus.send(&response);
         }
-        // Best effort: a failing optional service must not block a clean exit.
-        let _ = self.browser.shutdown();
+        self.core.stop();
         Ok(())
     }
 }
 
 impl IpcServer<crate::ipc::transport::StdioTransport> {
-    pub fn new_stdio(
-        process: Box<dyn ProcessPort>,
-        terminal: Box<dyn TerminalPort>,
-        sessions: SessionService,
-        policy: CapabilityPolicy,
-        browser: Box<dyn BrowserEnginePort>,
-        workspace_root: &Path,
-    ) -> Self {
+    pub fn new_stdio(core: Core) -> Self {
         let bus = MessageBus::new(crate::ipc::transport::StdioTransport::new());
-        let blink_installer = BlinkInstaller::new(workspace_root);
-        Self::new(
-            bus,
-            process,
-            terminal,
-            sessions,
-            policy,
-            browser,
-            blink_installer,
-        )
+        Self::new(bus, core)
     }
 }

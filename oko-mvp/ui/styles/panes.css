@@ -1,0 +1,43 @@
+/* ỌKỌ desktop UI — the pane contents: a terminal, and a web document.
+   A pane's chrome lives in main.css; what it renders lives here (UI-002). */
+
+/* Terminal panel */
+#terminal-output {
+  padding: 12px;
+  font-family: inherit;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+#terminal-input {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 28px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 0 12px;
+  outline: none;
+  flex-shrink: 0;
+}
+
+/* Browser panel */
+.browser-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.browser-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  padding: 24px;
+  text-align: center;
+  border: 1px dashed var(--border);
+  margin: 12px;
+  border-radius: 6px;
+}
