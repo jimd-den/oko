@@ -17,6 +17,31 @@ pub fn handle_create<T: IpcTransport>(
     Ok(object(vec![("session_id".into(), str(&id.0))]))
 }
 
+/// Send user input to a terminal session (SRD TERM-002, UI-002).
+///
+/// The desktop shell types through this route; the session lives in the host,
+/// so a UI reload does not end the shell (TERM-003).
+pub fn handle_write<T: IpcTransport>(
+    server: &mut IpcServer<T>,
+    payload: &crate::ipc::json::JsonValue,
+) -> Result<crate::ipc::json::JsonValue, String> {
+    let session_id = payload_string(payload, "session_id")?;
+    let text = payload_string(payload, "text")?;
+    let pty_session = server
+        .sessions
+        .pty(&SessionId(session_id))
+        .ok_or("session not found")?
+        .clone();
+    server
+        .terminal
+        .write_input(&pty_session, text.as_bytes())
+        .map_err(|e| format!("{:?}", e))?;
+    Ok(object(vec![(
+        "written".into(),
+        crate::ipc::json::num(text.len() as f64),
+    )]))
+}
+
 pub fn handle_read<T: IpcTransport>(
     server: &mut IpcServer<T>,
     payload: &crate::ipc::json::JsonValue,
@@ -71,6 +96,42 @@ mod tests {
         let payload = crate::ipc::json::object(vec![("session_id".into(), str("nonexistent"))]);
         let result = handle_read(&mut server, &payload);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn handle_write_sends_input_to_the_session() {
+        let mut server = test_server();
+        let created = handle_create(&mut server).unwrap();
+        let session_id = crate::ipc::json::get(&created, "session_id")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap()
+            .to_string();
+
+        let payload = crate::ipc::json::object(vec![
+            ("session_id".into(), str(&session_id)),
+            ("text".into(), str("echo written\n")),
+        ]);
+        handle_write(&mut server, &payload).unwrap();
+
+        let read = handle_read(
+            &mut server,
+            &crate::ipc::json::object(vec![("session_id".into(), str(&session_id))]),
+        )
+        .unwrap();
+        let output = crate::ipc::json::get(&read, "output")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap();
+        assert_eq!(output, "written\n");
+    }
+
+    #[test]
+    fn handle_write_to_an_unknown_session_errors() {
+        let mut server = test_server();
+        let payload = crate::ipc::json::object(vec![
+            ("session_id".into(), str("nonexistent")),
+            ("text".into(), str("echo hi\n")),
+        ]);
+        assert!(handle_write(&mut server, &payload).is_err());
     }
 
     #[test]

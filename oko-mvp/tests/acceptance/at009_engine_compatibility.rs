@@ -24,6 +24,15 @@ const MOCK: EngineExpectation = EngineExpectation {
     supports_script: true,
 };
 
+#[cfg(feature = "blink")]
+const BLINK: EngineExpectation = EngineExpectation {
+    name: "blink",
+    experimental: false,
+    supports_downloads: true,
+    supports_permissions: true,
+    supports_script: false,
+};
+
 #[cfg(feature = "servo")]
 const SERVO: EngineExpectation = EngineExpectation {
     name: "servo",
@@ -107,6 +116,14 @@ fn host_does_not_substitute_another_engine_for_an_unknown_name() {
 fn mock_engine_passes_the_shared_conformance_suite() {
     let engine: Box<dyn BrowserEnginePort> = Box::new(MockBrowserEngineAdapter::new());
     assert_engine_conformance(engine.as_ref(), &MOCK);
+}
+
+#[cfg(feature = "blink")]
+#[test]
+fn blink_engine_passes_the_shared_conformance_suite() {
+    use oko_core::browser::adapters::blink::BlinkBrowserEngineAdapter;
+    let engine = BlinkBrowserEngineAdapter::with_embedder(1 as *mut std::ffi::c_void);
+    assert_engine_conformance(&engine, &BLINK);
 }
 
 #[cfg(feature = "servo")]

@@ -44,6 +44,7 @@ fn dispatch_request<T: IpcTransport>(
         "host.status" => status::handle(server),
         "host.terminal.create" => terminal::handle_create(server),
         "host.terminal.read" => terminal::handle_read(server, &msg.payload),
+        "host.terminal.write" => terminal::handle_write(server, &msg.payload),
         "host.app.list" => app::handle_list(server),
         "host.app.launch" => app::handle_launch(server, &msg.payload),
         "host.app.stop" => app::handle_stop(server, &msg.payload),
