@@ -8,3 +8,9 @@ Cargo.lock
 
 # OS
 .DS_Store
+
+# Test harness artifacts (scripts/run-tests-individually.sh writes the log)
+*.log
+
+# Editor swap files
+*.swp
