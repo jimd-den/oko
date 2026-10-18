@@ -42,12 +42,18 @@ mod tests {
 
     #[test]
     fn terminal_create_needs_terminal_create() {
-        assert_eq!(required_for("host.terminal.create"), vec![Capability::TerminalCreate]);
+        assert_eq!(
+            required_for("host.terminal.create"),
+            vec![Capability::TerminalCreate]
+        );
     }
 
     #[test]
     fn installing_an_engine_needs_system_configure() {
-        assert_eq!(required_for("blink.install"), vec![Capability::SystemConfigure]);
+        assert_eq!(
+            required_for("blink.install"),
+            vec![Capability::SystemConfigure]
+        );
     }
 
     #[test]

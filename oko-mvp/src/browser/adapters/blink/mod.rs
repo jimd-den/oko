@@ -85,10 +85,10 @@ impl BlinkBrowserEngineAdapter {
             return Err(BrowserError::EngineUnavailable(
                 "blink adapter not linked against a Chromium build; \
                  enable the `blink` feature and link a pinned Chromium \
-                 embedder (SRD §5.1, §14)".into(),
+                 embedder (SRD §5.1, §14)"
+                    .into(),
             ));
         }
         Ok(())
     }
 }
-

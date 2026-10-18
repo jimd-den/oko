@@ -21,7 +21,8 @@ impl BrowserEnginePort for BlinkBrowserEngineAdapter {
         } else {
             Err(BrowserError::EngineUnavailable(
                 "blink embedder not linked (feature `blink` requires a \
-                 separately built Chromium)".into(),
+                 separately built Chromium)"
+                    .into(),
             ))
         }
     }
@@ -67,7 +68,10 @@ impl BrowserEnginePort for BlinkBrowserEngineAdapter {
         *next += 1;
         sessions.insert(
             id.clone(),
-            BlinkSession { url: config.url.clone(), closed: false },
+            BlinkSession {
+                url: config.url.clone(),
+                closed: false,
+            },
         );
         Ok(id)
     }
@@ -78,7 +82,9 @@ impl BrowserEnginePort for BlinkBrowserEngineAdapter {
         }
         self.require_linked()?;
         let mut sessions = self.sessions.lock().unwrap();
-        let entry = sessions.get_mut(session).ok_or(BrowserError::SessionNotFound)?;
+        let entry = sessions
+            .get_mut(session)
+            .ok_or(BrowserError::SessionNotFound)?;
         if entry.closed {
             return Err(BrowserError::SessionNotFound);
         }
@@ -88,12 +94,18 @@ impl BrowserEnginePort for BlinkBrowserEngineAdapter {
 
     fn close_session(&self, session: &BrowserSession) -> Result<(), BrowserError> {
         let mut sessions = self.sessions.lock().unwrap();
-        let entry = sessions.get_mut(session).ok_or(BrowserError::SessionNotFound)?;
+        let entry = sessions
+            .get_mut(session)
+            .ok_or(BrowserError::SessionNotFound)?;
         entry.closed = true;
         Ok(())
     }
 
-    fn execute_script(&self, _session: &BrowserSession, _script: &str) -> Result<String, BrowserError> {
+    fn execute_script(
+        &self,
+        _session: &BrowserSession,
+        _script: &str,
+    ) -> Result<String, BrowserError> {
         if let Some(reason) = self.crash_reason.lock().unwrap().as_ref() {
             return Err(BrowserError::Crash(format!("engine crashed: {}", reason)));
         }
@@ -107,4 +119,3 @@ impl BrowserEnginePort for BlinkBrowserEngineAdapter {
         self.crash_reason.lock().unwrap().clone()
     }
 }
-

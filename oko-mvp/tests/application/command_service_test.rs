@@ -3,14 +3,11 @@
 //! Exercises parse → validate → handle → present with real adapters owned
 //! inline in each test (avoiding dangling borrows from a helper function).
 
+use oko_core::adapters::{linux_process::LinuxProcessAdapter, linux_pty::LinuxPtyAdapter};
 use oko_core::application::command_service::{CommandContext, CommandService};
 use oko_core::application::session_service::SessionService;
 use oko_core::domain::capability::{Capability, CapabilityPolicy};
 use oko_core::domain::command::{Command, CommandResult};
-use oko_core::adapters::{
-    linux_pty::LinuxPtyAdapter,
-    linux_process::LinuxProcessAdapter,
-};
 
 mod builtin_commands;
 
@@ -126,7 +123,11 @@ fn execute_ui_mode_and_browser_engine() {
     svc.register("ui mode", |cmd, _ctx| {
         let mode = match cmd {
             Command::UiMode { mode } => mode.clone(),
-            _ => return Ok(oko_core::domain::command::CommandResult::Error("missing".into())),
+            _ => {
+                return Ok(oko_core::domain::command::CommandResult::Error(
+                    "missing".into(),
+                ))
+            }
         };
         Ok(oko_core::domain::command::CommandResult::Ok(format!(
             "ui mode set to {}",

@@ -6,8 +6,7 @@
 use crate::application::session_service::SessionService;
 use crate::domain::capability::CapabilityPolicy;
 use crate::domain::command::{
-    parse_command, validate_command, Command, CommandId, CommandResult, ParseError,
-    ValidationError,
+    parse_command, validate_command, Command, CommandId, CommandResult, ParseError, ValidationError,
 };
 use crate::ports::process::ProcessPort;
 use crate::ports::terminal::TerminalPort;
@@ -71,7 +70,8 @@ impl CommandService {
             + Sync
             + 'static,
     {
-        self.handlers.insert(CommandId(id.to_string()), Box::new(handler));
+        self.handlers
+            .insert(CommandId(id.to_string()), Box::new(handler));
     }
 
     /// Execute a raw input line: parse → validate → handle → present.
@@ -88,9 +88,7 @@ impl CommandService {
             return CommandResult::Ok("goodbye".into());
         }
 
-        if let Err(ValidationError::MissingCapability(caps)) =
-            validate_command(&cmd, ctx.policy)
-        {
+        if let Err(ValidationError::MissingCapability(caps)) = validate_command(&cmd, ctx.policy) {
             let names: Vec<String> = caps.iter().map(|c| format!("{:?}", c)).collect();
             return CommandResult::Error(format!(
                 "permission denied: requires {}",

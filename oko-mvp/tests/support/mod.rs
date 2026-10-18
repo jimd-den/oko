@@ -11,6 +11,6 @@
 #![allow(dead_code)]
 
 pub mod engine_conformance;
-pub mod host_binary;
 pub mod fake_engines;
+pub mod host_binary;
 pub mod scripted_transport;

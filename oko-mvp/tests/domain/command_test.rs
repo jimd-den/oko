@@ -1,8 +1,8 @@
 //! Red-green TDD tests for domain command parsing and validation.
 //!
 //! Cycle 1: parse_command — one assertion per test, small composable function.
-use oko_core::domain::command::{parse_command, validate_command, Command};
 use oko_core::domain::capability::{Capability, CapabilityPolicy};
+use oko_core::domain::command::{parse_command, validate_command, Command};
 
 #[test]
 fn parse_help() {
@@ -23,7 +23,9 @@ fn parse_app_list() {
 fn parse_app_launch_with_id() {
     assert_eq!(
         parse_command("app launch terminal"),
-        Ok(Command::AppLaunch { id: "terminal".into() })
+        Ok(Command::AppLaunch {
+            id: "terminal".into()
+        })
     );
 }
 
@@ -31,7 +33,9 @@ fn parse_app_launch_with_id() {
 fn parse_app_stop_with_id() {
     assert_eq!(
         parse_command("app stop terminal"),
-        Ok(Command::AppStop { id: "terminal".into() })
+        Ok(Command::AppStop {
+            id: "terminal".into()
+        })
     );
 }
 

@@ -82,10 +82,10 @@ impl ServoBrowserEngineAdapter {
             return Err(BrowserError::EngineUnavailable(
                 "servo adapter not linked against a Servo build; \
                  enable the `servo` feature and link a pinned Servo \
-                 checkout (SRD §5.2, §14)".into(),
+                 checkout (SRD §5.2, §14)"
+                    .into(),
             ));
         }
         Ok(())
     }
 }
-

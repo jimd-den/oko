@@ -23,7 +23,9 @@ pub fn handle_install<T: IpcTransport>(
     }
 }
 
-pub fn handle_status<T: IpcTransport>(server: &IpcServer<T>) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle_status<T: IpcTransport>(
+    server: &IpcServer<T>,
+) -> Result<crate::ipc::json::JsonValue, String> {
     let state: String = match server.blink_installer.status() {
         InstallState::NotInstalled => "not-installed".to_string(),
         InstallState::Downloaded => "downloaded".to_string(),
@@ -37,7 +39,10 @@ pub fn handle_fetch_checksum<T: IpcTransport>(
     payload: &crate::ipc::json::JsonValue,
 ) -> Result<crate::ipc::json::JsonValue, String> {
     let path = payload_string(payload, "path")?;
-    match server.blink_installer.fetch_checksum(std::path::Path::new(&path)) {
+    match server
+        .blink_installer
+        .fetch_checksum(std::path::Path::new(&path))
+    {
         InstallResult::Failed(msg) => {
             if let Some(digest) = msg.split("is ").nth(1).and_then(|s| s.split(' ').next()) {
                 Ok(object(vec![("digest".into(), str(digest))]))
@@ -68,7 +73,9 @@ mod tests {
     fn handle_status_not_installed() {
         let server = test_server();
         let result = handle_status(&server).unwrap();
-        let state = crate::ipc::json::get(&result, "state").and_then(crate::ipc::json::as_str).unwrap();
+        let state = crate::ipc::json::get(&result, "state")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap();
         assert_eq!(state, "not-installed");
     }
 
@@ -81,23 +88,23 @@ mod tests {
 
     fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
         use crate::application::session_service::SessionService;
-        use crate::domain::capability::{Capability, CapabilityPolicy};
-        use crate::browser::ports::engine::BrowserEnginePort;
         use crate::browser::adapters::mock::MockBrowserEngineAdapter;
+        use crate::browser::ports::engine::BrowserEnginePort;
+        use crate::domain::capability::{Capability, CapabilityPolicy};
         use crate::ports::process::ProcessPort;
         use crate::ports::terminal::TerminalPort;
         use std::env::temp_dir;
 
-        let process: Box<dyn ProcessPort> = Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
-        let terminal: Box<dyn TerminalPort> = Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
+        let process: Box<dyn ProcessPort> =
+            Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
+        let terminal: Box<dyn TerminalPort> =
+            Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
         let sessions = SessionService::new();
         let policy = CapabilityPolicy::new().with(Capability::SystemConfigure);
         let browser: Box<dyn BrowserEnginePort> = Box::new(MockBrowserEngineAdapter::new());
         let root = temp_dir().join("oko-blink-handler-test");
         let _ = std::fs::create_dir_all(root.join("toolchain"));
 
-        IpcServer::new_stdio(
-            process, terminal, sessions, policy, browser, &root,
-        )
+        IpcServer::new_stdio(process, terminal, sessions, policy, browser, &root)
     }
 }

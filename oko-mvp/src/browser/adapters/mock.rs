@@ -6,7 +6,7 @@
 //! builds without touching domain or application code.
 
 use crate::browser::ports::engine::{
-    BackendCapabilities, BrowserEnginePort, BrowserError, BrowserSession, BrowserConfig,
+    BackendCapabilities, BrowserConfig, BrowserEnginePort, BrowserError, BrowserSession,
 };
 use crate::domain::session::SessionId;
 use std::collections::HashMap;
@@ -92,17 +92,24 @@ impl BrowserEnginePort for MockBrowserEngineAdapter {
         *next += 1;
         sessions.insert(
             id.clone(),
-            SessionEntry { url: config.url.clone(), closed: false },
+            SessionEntry {
+                url: config.url.clone(),
+                closed: false,
+            },
         );
         Ok(id)
     }
 
     fn navigate(&self, session: &BrowserSession, url: &str) -> Result<(), BrowserError> {
         if self.crash_reason.lock().unwrap().is_some() {
-            return Err(BrowserError::Crash("engine crashed during navigation".into()));
+            return Err(BrowserError::Crash(
+                "engine crashed during navigation".into(),
+            ));
         }
         let mut sessions = self.sessions.lock().unwrap();
-        let entry = sessions.get_mut(session).ok_or(BrowserError::SessionNotFound)?;
+        let entry = sessions
+            .get_mut(session)
+            .ok_or(BrowserError::SessionNotFound)?;
         if entry.closed {
             return Err(BrowserError::SessionNotFound);
         }
@@ -112,12 +119,18 @@ impl BrowserEnginePort for MockBrowserEngineAdapter {
 
     fn close_session(&self, session: &BrowserSession) -> Result<(), BrowserError> {
         let mut sessions = self.sessions.lock().unwrap();
-        let entry = sessions.get_mut(session).ok_or(BrowserError::SessionNotFound)?;
+        let entry = sessions
+            .get_mut(session)
+            .ok_or(BrowserError::SessionNotFound)?;
         entry.closed = true;
         Ok(())
     }
 
-    fn execute_script(&self, _session: &BrowserSession, script: &str) -> Result<String, BrowserError> {
+    fn execute_script(
+        &self,
+        _session: &BrowserSession,
+        script: &str,
+    ) -> Result<String, BrowserError> {
         if self.crash_reason.lock().unwrap().is_some() {
             return Err(BrowserError::Crash("engine crashed during script".into()));
         }
@@ -146,7 +159,11 @@ mod tests {
         let engine = MockBrowserEngineAdapter::new();
         engine.initialize().unwrap();
         let session = engine
-            .create_session(BrowserConfig { profile: "default".into(), url: None, off_the_record: false })
+            .create_session(BrowserConfig {
+                profile: "default".into(),
+                url: None,
+                off_the_record: false,
+            })
             .unwrap();
         engine.navigate(&session, "https://example.com").unwrap();
         assert_eq!(engine.last_crash_reason(), None);

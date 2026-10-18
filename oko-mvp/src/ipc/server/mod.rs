@@ -70,14 +70,19 @@ impl<T: IpcTransport> IpcServer<T> {
                 Err(e) if e == "eof" => break,
                 Err(e) => {
                     let _ = self.bus.send(&crate::ipc::message::Message::error_response(
-                        "0", "host.error", "io", &e,
+                        "0",
+                        "host.error",
+                        "io",
+                        &e,
                     ));
                     continue;
                 }
             };
             if msg.route == "host.shutdown" {
                 let _ = self.bus.send(&crate::ipc::message::Message::response(
-                    &msg.id, &msg.route, crate::ipc::json::object(vec![]),
+                    &msg.id,
+                    &msg.route,
+                    crate::ipc::json::object(vec![]),
                 ));
                 break;
             }
@@ -101,6 +106,14 @@ impl IpcServer<crate::ipc::transport::StdioTransport> {
     ) -> Self {
         let bus = MessageBus::new(crate::ipc::transport::StdioTransport::new());
         let blink_installer = BlinkInstaller::new(workspace_root);
-        Self::new(bus, process, terminal, sessions, policy, browser, blink_installer)
+        Self::new(
+            bus,
+            process,
+            terminal,
+            sessions,
+            policy,
+            browser,
+            blink_installer,
+        )
     }
 }

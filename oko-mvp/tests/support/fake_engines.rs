@@ -61,7 +61,11 @@ impl BrowserEnginePort for UnavailableEngine {
     fn close_session(&self, _session: &BrowserSession) -> Result<(), BrowserError> {
         Err(BrowserError::EngineUnavailable(UNLINKED.into()))
     }
-    fn execute_script(&self, _session: &BrowserSession, _script: &str) -> Result<String, BrowserError> {
+    fn execute_script(
+        &self,
+        _session: &BrowserSession,
+        _script: &str,
+    ) -> Result<String, BrowserError> {
         Err(BrowserError::EngineUnavailable(UNLINKED.into()))
     }
     fn last_crash_reason(&self) -> Option<String> {
@@ -97,7 +101,11 @@ impl BrowserEnginePort for CrashingEngine {
     fn close_session(&self, _session: &BrowserSession) -> Result<(), BrowserError> {
         Err(BrowserError::Crash(CRASHED.into()))
     }
-    fn execute_script(&self, _session: &BrowserSession, _script: &str) -> Result<String, BrowserError> {
+    fn execute_script(
+        &self,
+        _session: &BrowserSession,
+        _script: &str,
+    ) -> Result<String, BrowserError> {
         Err(BrowserError::Crash(CRASHED.into()))
     }
     fn last_crash_reason(&self) -> Option<String> {

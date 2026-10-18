@@ -2,7 +2,6 @@
 //! under the 200-line ceiling. All eight drive the pure `validate_request`.
 //! A child module of `host_api`, so `use super::*` still reaches the vocabulary.
 
-
 use super::*;
 
 #[test]
@@ -17,32 +16,28 @@ fn validate_terminal_create_requires_terminal_create_cap() {
 #[test]
 fn validate_app_launch_requires_process_spawn_cap() {
     let policy = CapabilityPolicy::new().with(Capability::ProcessSpawn);
-    assert!(validate_request(
-        &HostApiRequest::AppLaunch { id: "calc".into() },
-        &policy,
-    )
-    .is_ok());
+    assert!(validate_request(&HostApiRequest::AppLaunch { id: "calc".into() }, &policy,).is_ok());
 
     let empty = CapabilityPolicy::new();
-    assert!(validate_request(
-        &HostApiRequest::AppLaunch { id: "calc".into() },
-        &empty,
-    )
-    .is_err());
+    assert!(validate_request(&HostApiRequest::AppLaunch { id: "calc".into() }, &empty,).is_err());
 }
 
 #[test]
 fn validate_browser_open_requires_browser_navigate_cap() {
     let policy = CapabilityPolicy::new().with(Capability::BrowserNavigate);
     assert!(validate_request(
-        &HostApiRequest::BrowserOpen { url: "https://example.com".into() },
+        &HostApiRequest::BrowserOpen {
+            url: "https://example.com".into()
+        },
         &policy,
     )
     .is_ok());
 
     let empty = CapabilityPolicy::new();
     assert!(validate_request(
-        &HostApiRequest::BrowserOpen { url: "https://example.com".into() },
+        &HostApiRequest::BrowserOpen {
+            url: "https://example.com".into()
+        },
         &empty,
     )
     .is_err());
@@ -51,11 +46,7 @@ fn validate_browser_open_requires_browser_navigate_cap() {
 #[test]
 fn validate_status_needs_no_capability() {
     let empty = CapabilityPolicy::new();
-    assert!(validate_request(
-        &HostApiRequest::SystemStatus,
-        &empty,
-    )
-    .is_ok());
+    assert!(validate_request(&HostApiRequest::SystemStatus, &empty,).is_ok());
 }
 
 #[test]

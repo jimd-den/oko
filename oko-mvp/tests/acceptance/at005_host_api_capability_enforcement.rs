@@ -26,10 +26,7 @@ fn request(id: &str, route: &str) -> Message {
 
 #[test]
 fn a_route_needing_no_capability_still_answers_without_one() {
-    let script = vec![
-        request("1", "host.status"),
-        request("2", "host.shutdown"),
-    ];
+    let script = vec![request("1", "host.status"), request("2", "host.shutdown")];
 
     let (transport, run) = run_host_with_policy(
         script,

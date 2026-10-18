@@ -6,7 +6,9 @@ use crate::ipc::json::object;
 use crate::ipc::server::IpcServer;
 use crate::ipc::transport::IpcTransport;
 
-pub fn handle_create<T: IpcTransport>(server: &mut IpcServer<T>) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle_create<T: IpcTransport>(
+    server: &mut IpcServer<T>,
+) -> Result<crate::ipc::json::JsonValue, String> {
     let id = SessionId(format!("pty-{}", next_id()));
     server
         .sessions
@@ -57,7 +59,9 @@ mod tests {
     fn handle_create_returns_session_id() {
         let mut server = test_server();
         let result = handle_create(&mut server).unwrap();
-        let session_id = crate::ipc::json::get(&result, "session_id").and_then(crate::ipc::json::as_str).unwrap();
+        let session_id = crate::ipc::json::get(&result, "session_id")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap();
         assert!(session_id.starts_with("pty-"));
     }
 
@@ -79,23 +83,23 @@ mod tests {
 
     fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
         use crate::application::session_service::SessionService;
-        use crate::domain::capability::{Capability, CapabilityPolicy};
-        use crate::browser::ports::engine::BrowserEnginePort;
         use crate::browser::adapters::mock::MockBrowserEngineAdapter;
+        use crate::browser::ports::engine::BrowserEnginePort;
+        use crate::domain::capability::{Capability, CapabilityPolicy};
         use crate::ports::process::ProcessPort;
         use crate::ports::terminal::TerminalPort;
         use std::env::temp_dir;
 
-        let process: Box<dyn ProcessPort> = Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
-        let terminal: Box<dyn TerminalPort> = Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
+        let process: Box<dyn ProcessPort> =
+            Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
+        let terminal: Box<dyn TerminalPort> =
+            Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
         let sessions = SessionService::new();
         let policy = CapabilityPolicy::new().with(Capability::TerminalCreate);
         let browser: Box<dyn BrowserEnginePort> = Box::new(MockBrowserEngineAdapter::new());
         let root = temp_dir().join("oko-terminal-test");
         let _ = std::fs::create_dir_all(root.join("toolchain"));
 
-        IpcServer::new_stdio(
-            process, terminal, sessions, policy, browser, &root,
-        )
+        IpcServer::new_stdio(process, terminal, sessions, policy, browser, &root)
     }
 }

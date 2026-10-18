@@ -64,7 +64,11 @@ pub trait BrowserEnginePort: Send + Sync {
     fn close_session(&self, session: &BrowserSession) -> Result<(), BrowserError>;
 
     /// Execute engine-neutral script in a session (for host API bridge).
-    fn execute_script(&self, session: &BrowserSession, script: &str) -> Result<String, BrowserError>;
+    fn execute_script(
+        &self,
+        session: &BrowserSession,
+        script: &str,
+    ) -> Result<String, BrowserError>;
 
     /// Crash notification and recovery (SRD ENG-004).
     fn last_crash_reason(&self) -> Option<String>;

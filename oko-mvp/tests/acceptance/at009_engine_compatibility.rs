@@ -42,8 +42,15 @@ fn capabilities_reply_reports_every_declared_capability() {
 
     let (transport, _run) = run_host(script, Box::new(MockBrowserEngineAdapter::new()));
 
-    let caps = transport.reply_for("host.browser.capabilities").expect("capabilities reply");
-    for field in ["supports_js", "supports_downloads", "supports_permissions", "is_experimental"] {
+    let caps = transport
+        .reply_for("host.browser.capabilities")
+        .expect("capabilities reply");
+    for field in [
+        "supports_js",
+        "supports_downloads",
+        "supports_permissions",
+        "is_experimental",
+    ] {
         assert!(
             json::get(&caps, field).and_then(json::as_bool).is_some(),
             "ENG-003: {} must be declared, reply was {:?}",

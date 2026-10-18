@@ -33,14 +33,19 @@ impl IpcTransport for StdioTransport {
     fn send(&self, msg: &Message) -> Result<(), String> {
         let line = msg.to_line();
         println!("{}", line);
-        std::io::stdout().flush().map_err(|e| format!("flush: {}", e))
+        std::io::stdout()
+            .flush()
+            .map_err(|e| format!("flush: {}", e))
     }
 
     fn recv(&self) -> Result<Message, String> {
         use std::io::BufRead;
         let stdin = std::io::stdin();
         let mut line = String::new();
-        stdin.lock().read_line(&mut line).map_err(|e| format!("read: {}", e))?;
+        stdin
+            .lock()
+            .read_line(&mut line)
+            .map_err(|e| format!("read: {}", e))?;
         if line.is_empty() {
             return Err("eof".into());
         }

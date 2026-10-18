@@ -2,7 +2,6 @@
 //! ceiling. Behaviour is unchanged: one test per behaviour, through public `parse`.
 //! A child module of `parser`, so `use super::*` still reaches the private scanners.
 
-
 use super::*;
 use crate::ipc::json::num;
 
@@ -48,8 +47,14 @@ fn parse_null() {
 #[test]
 fn parse_nested_object() {
     let v = parse(r#"{"a":1,"b":"hi"}"#).unwrap();
-    assert_eq!(crate::ipc::json::get(&v, "a"), Some(&JsonValue::Number(1.0)));
-    assert_eq!(crate::ipc::json::as_str(crate::ipc::json::get(&v, "b").unwrap()), Some("hi"));
+    assert_eq!(
+        crate::ipc::json::get(&v, "a"),
+        Some(&JsonValue::Number(1.0))
+    );
+    assert_eq!(
+        crate::ipc::json::as_str(crate::ipc::json::get(&v, "b").unwrap()),
+        Some("hi")
+    );
 }
 
 #[test]

@@ -10,7 +10,7 @@
 //! engine this build cannot serve is reported as unavailable and the terminal
 //! core keeps working (SRD ENG-008, §4.2); it is never replaced by another.
 
-use oko_core::adapters::{linux_pty::LinuxPtyAdapter, linux_process::LinuxProcessAdapter};
+use oko_core::adapters::{linux_process::LinuxProcessAdapter, linux_pty::LinuxPtyAdapter};
 use oko_core::application::session_service::SessionService;
 use oko_core::browser::adapters::select;
 use oko_core::domain::capability::{Capability, CapabilityPolicy};
@@ -52,13 +52,21 @@ fn main() {
     // --- IPC host --------------------------------------------------------
     let workspace_root = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
     let mut server = IpcServer::new_stdio(
-        process, terminal, sessions, policy, browser, &workspace_root,
+        process,
+        terminal,
+        sessions,
+        policy,
+        browser,
+        &workspace_root,
     );
 
     println!("oko-host v0.2.0 (slice 2: web-based desktop)");
     println!("ipc: stdio (typed, versioned, validated messages)");
     println!("engine: {}", requested);
-    println!("engines in this build: {}", select::engine_names().join(", "));
+    println!(
+        "engines in this build: {}",
+        select::engine_names().join(", ")
+    );
     println!("workspace: {}", workspace_root.display());
     println!("engine state: ask the host API route host.browser.engine");
 

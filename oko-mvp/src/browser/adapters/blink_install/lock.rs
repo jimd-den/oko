@@ -18,8 +18,7 @@ pub struct LockEntry {
 
 /// Parse the [blink] section of versions.lock.
 pub(super) fn parse_lock_entry(path: &Path) -> Result<LockEntry, String> {
-    let text = fs::read_to_string(path)
-        .map_err(|e| format!("read versions.lock: {}", e))?;
+    let text = fs::read_to_string(path).map_err(|e| format!("read versions.lock: {}", e))?;
     let mut in_blink = false;
     let mut fields: HashMap<String, String> = HashMap::new();
     for line in text.lines() {

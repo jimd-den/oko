@@ -19,7 +19,10 @@ pub struct UnavailableBrowserEngine {
 
 impl UnavailableBrowserEngine {
     pub fn new(name: &str, reason: &str) -> Self {
-        Self { name: name.into(), reason: reason.into() }
+        Self {
+            name: name.into(),
+            reason: reason.into(),
+        }
     }
 
     fn unavailable(&self) -> BrowserError {
@@ -58,7 +61,11 @@ impl BrowserEnginePort for UnavailableBrowserEngine {
     fn close_session(&self, _session: &BrowserSession) -> Result<(), BrowserError> {
         Err(self.unavailable())
     }
-    fn execute_script(&self, _session: &BrowserSession, _script: &str) -> Result<String, BrowserError> {
+    fn execute_script(
+        &self,
+        _session: &BrowserSession,
+        _script: &str,
+    ) -> Result<String, BrowserError> {
         Err(self.unavailable())
     }
     fn last_crash_reason(&self) -> Option<String> {

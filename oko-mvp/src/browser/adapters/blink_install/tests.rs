@@ -26,10 +26,7 @@ fn install_without_checksum_fails_cleanly() {
     )
     .unwrap();
     let installer = BlinkInstaller::new(&tmp);
-    assert!(matches!(
-        installer.install(),
-        InstallResult::Failed(_)
-    ));
+    assert!(matches!(installer.install(), InstallResult::Failed(_)));
 }
 
 #[test]
@@ -40,7 +37,11 @@ fn install_creates_built_state() {
     fs::create_dir_all(tmp.join("downloads")).unwrap();
     // Pre-create a dummy archive so the download step is skipped
     // (no curl/wget available in the test environment).
-    fs::write(tmp.join("downloads").join("chromium-src.tar.xz"), b"dummy-archive").unwrap();
+    fs::write(
+        tmp.join("downloads").join("chromium-src.tar.xz"),
+        b"dummy-archive",
+    )
+    .unwrap();
     fs::write(
         tmp.join("toolchain").join("versions.lock"),
         "[blink]\ncomponent = \"Blink\"\nsource_url = \"https://example.com\"\npinned_revision = \"abc\"\nsource_checksum_sha256 = \"deadbeef\"\n",
@@ -52,10 +53,18 @@ fn install_creates_built_state() {
     // To test the build path, we skip straight to checking status after
     // manually creating the built marker.
     let result = installer.install();
-    assert!(matches!(result, InstallResult::Failed(_)), "checksum mismatch is expected for dummy archive, got {:?}", result);
+    assert!(
+        matches!(result, InstallResult::Failed(_)),
+        "checksum mismatch is expected for dummy archive, got {:?}",
+        result
+    );
     // Manually simulate a built state to verify status reporting.
     fs::create_dir_all(tmp.join("build").join("chromium")).unwrap();
-    fs::write(tmp.join("build").join("chromium").join("content_embedder"), b"built").unwrap();
+    fs::write(
+        tmp.join("build").join("chromium").join("content_embedder"),
+        b"built",
+    )
+    .unwrap();
     assert_eq!(installer.status(), InstallState::Built);
 }
 

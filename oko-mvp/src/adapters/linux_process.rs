@@ -5,9 +5,7 @@
 //! integration can replace this behind the same trait without touching
 //! domain/application.
 
-use crate::ports::process::{
-    ExitStatus, ProcessError, ProcessHandle, ProcessPort, SpawnRequest,
-};
+use crate::ports::process::{ExitStatus, ProcessError, ProcessHandle, ProcessPort, SpawnRequest};
 use std::collections::HashMap;
 use std::os::unix::process::ExitStatusExt;
 use std::process::Stdio;
@@ -66,14 +64,18 @@ impl ProcessPort for LinuxProcessAdapter {
             },
         };
         let handle = {
-            let mut inner = self.inner.lock().map_err(|_| {
-                ProcessError::SpawnFailed("adapter lock poisoned".into())
-            })?;
+            let mut inner = self
+                .inner
+                .lock()
+                .map_err(|_| ProcessError::SpawnFailed("adapter lock poisoned".into()))?;
             let id = ProcessHandle(inner.next_id);
             inner.next_id += 1;
             inner.results.insert(
                 id,
-                CachedResult { stdout, exit: exit.clone() },
+                CachedResult {
+                    stdout,
+                    exit: exit.clone(),
+                },
             );
             id
         };
@@ -86,9 +88,10 @@ impl ProcessPort for LinuxProcessAdapter {
     }
 
     fn wait(&self, handle: ProcessHandle) -> Result<ExitStatus, ProcessError> {
-        let inner = self.inner.lock().map_err(|_| {
-            ProcessError::SpawnFailed("adapter lock poisoned".into())
-        })?;
+        let inner = self
+            .inner
+            .lock()
+            .map_err(|_| ProcessError::SpawnFailed("adapter lock poisoned".into()))?;
         inner
             .results
             .get(&handle)
@@ -97,9 +100,10 @@ impl ProcessPort for LinuxProcessAdapter {
     }
 
     fn stdout(&self, handle: ProcessHandle) -> Result<String, ProcessError> {
-        let inner = self.inner.lock().map_err(|_| {
-            ProcessError::SpawnFailed("adapter lock poisoned".into())
-        })?;
+        let inner = self
+            .inner
+            .lock()
+            .map_err(|_| ProcessError::SpawnFailed("adapter lock poisoned".into()))?;
         inner
             .results
             .get(&handle)

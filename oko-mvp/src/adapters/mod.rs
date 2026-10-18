@@ -5,6 +5,6 @@
 //! touching domain or application code (SRD §4.2, §4.3).
 
 pub mod file_storage;
-pub mod linux_pty;
 pub mod linux_process;
+pub mod linux_pty;
 pub mod system_clock;

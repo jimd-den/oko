@@ -134,7 +134,10 @@ impl BlinkInstaller {
     }
 
     fn build(&self) -> InstallResult {
-        println!("blink: building content embedder -> {}", self.build_dir.display());
+        println!(
+            "blink: building content embedder -> {}",
+            self.build_dir.display()
+        );
         let _ = fs::create_dir_all(&self.build_dir);
         let embedder = self.build_dir.join("content_embedder");
         let _ = fs::write(
@@ -161,13 +164,11 @@ impl BlinkInstaller {
         // In production, rewrite versions.lock with the digest. For MVP,
         // report it so the operator can record it.
         let _ = digest;
-        InstallResult::Failed(
-            format!(
-                "SHA-256 of {} is {}\nRecord it as source_checksum_sha256 in toolchain/versions.lock \
+        InstallResult::Failed(format!(
+            "SHA-256 of {} is {}\nRecord it as source_checksum_sha256 in toolchain/versions.lock \
                  [blink], then run `blink install`.",
-                path.display(),
-                digest
-            ),
-        )
+            path.display(),
+            digest
+        ))
     }
 }

@@ -39,5 +39,8 @@ fn core_layers_compile_without_ui_browser_graphics() {
 
     // If this compiles and runs, no UI/browser/graphics crate is required.
     assert_eq!(_cmd, oko_core::domain::command::Command::Help);
-    assert_eq!(_lifecycle, oko_core::domain::lifecycle::LifecycleState::Running);
+    assert_eq!(
+        _lifecycle,
+        oko_core::domain::lifecycle::LifecycleState::Running
+    );
 }

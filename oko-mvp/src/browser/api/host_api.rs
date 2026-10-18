@@ -31,23 +31,60 @@ pub enum HostApiRequest {
 /// A host API response.
 #[derive(Debug, Clone)]
 pub enum HostApiResponse {
-    TerminalCreated { session_id: String },
-    TerminalOutput { output: String },
-    TerminalExitStatus { code: Option<i32> },
-    AppList { sessions: Vec<String> },
-    AppLaunched { id: String },
-    AppStopped { id: String },
-    SystemStatus { core: String, terminal: String },
-    BrowserOpened { url: String },
-    ConfigRead { engine: String, terminal_visible: bool },
-    BlinkInstalled { state: String },
-    BlinkStatus { state: String },
-    BlinkChecksum { digest: String },
-    UiMode { mode: String },
-    RenderDemo { output: String },
-    RenderStats { stats: String },
-    RenderCapture { path: String },
-    Error { code: String, message: String },
+    TerminalCreated {
+        session_id: String,
+    },
+    TerminalOutput {
+        output: String,
+    },
+    TerminalExitStatus {
+        code: Option<i32>,
+    },
+    AppList {
+        sessions: Vec<String>,
+    },
+    AppLaunched {
+        id: String,
+    },
+    AppStopped {
+        id: String,
+    },
+    SystemStatus {
+        core: String,
+        terminal: String,
+    },
+    BrowserOpened {
+        url: String,
+    },
+    ConfigRead {
+        engine: String,
+        terminal_visible: bool,
+    },
+    BlinkInstalled {
+        state: String,
+    },
+    BlinkStatus {
+        state: String,
+    },
+    BlinkChecksum {
+        digest: String,
+    },
+    UiMode {
+        mode: String,
+    },
+    RenderDemo {
+        output: String,
+    },
+    RenderStats {
+        stats: String,
+    },
+    RenderCapture {
+        path: String,
+    },
+    Error {
+        code: String,
+        message: String,
+    },
 }
 
 /// Capabilities required by each host API request.

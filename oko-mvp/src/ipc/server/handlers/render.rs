@@ -15,18 +15,30 @@ pub fn handle_demo<T: IpcTransport>(
     let mut fb = Framebuffer::new(640, 480);
     fb.render_demo(&message);
     let ppm = fb.to_ppm();
-    let path = payload_string(payload, "path").unwrap_or_else(|_| "/tmp/oko-render-demo.ppm".into());
+    let path =
+        payload_string(payload, "path").unwrap_or_else(|_| "/tmp/oko-render-demo.ppm".into());
     fs::write(&path, &ppm).map_err(|e| format!("write demo: {}", e))?;
     Ok(object(vec![
-        ("output".into(), str(&format!("rendered {}x{} software demo -> {}", fb.width, fb.height, path))),
+        (
+            "output".into(),
+            str(&format!(
+                "rendered {}x{} software demo -> {}",
+                fb.width, fb.height, path
+            )),
+        ),
         ("path".into(), str(&path)),
         ("backend".into(), str("software")),
     ]))
 }
 
-pub fn handle_stats<T: IpcTransport>(_server: &IpcServer<T>) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle_stats<T: IpcTransport>(
+    _server: &IpcServer<T>,
+) -> Result<crate::ipc::json::JsonValue, String> {
     Ok(object(vec![
-        ("stats".into(), str("software renderer: 640x480 demo framebuffer")),
+        (
+            "stats".into(),
+            str("software renderer: 640x480 demo framebuffer"),
+        ),
         ("backend".into(), str("software")),
         ("accelerated".into(), bool(false)),
     ]))
@@ -71,7 +83,9 @@ mod tests {
         let mut server = test_server();
         let payload = crate::ipc::json::object(vec![]);
         let result = handle_demo(&mut server, &payload).unwrap();
-        let backend = crate::ipc::json::get(&result, "backend").and_then(crate::ipc::json::as_str).unwrap();
+        let backend = crate::ipc::json::get(&result, "backend")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap();
         assert_eq!(backend, "software");
     }
 
@@ -79,7 +93,9 @@ mod tests {
     fn handle_stats_returns_software() {
         let server = test_server();
         let result = handle_stats(&server).unwrap();
-        let backend = crate::ipc::json::get(&result, "backend").and_then(crate::ipc::json::as_str).unwrap();
+        let backend = crate::ipc::json::get(&result, "backend")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap();
         assert_eq!(backend, "software");
     }
 
@@ -89,8 +105,10 @@ mod tests {
         // Per-process name: a fixed path in the shared temp directory is a race
         // between two test processes that write and delete the same file, which
         // is how this test flakes (AGENTS.md §2.5, determinism).
-        let out = std::env::temp_dir()
-            .join(format!("oko-render-capture-handler-test-{}.ppm", std::process::id()));
+        let out = std::env::temp_dir().join(format!(
+            "oko-render-capture-handler-test-{}.ppm",
+            std::process::id()
+        ));
         let _ = std::fs::remove_file(&out);
         let payload = crate::ipc::json::object(vec![("path".into(), str(&out.to_string_lossy()))]);
         let result = handle_capture(&mut server, &payload);
@@ -105,23 +123,23 @@ mod tests {
 
     fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
         use crate::application::session_service::SessionService;
-        use crate::domain::capability::{Capability, CapabilityPolicy};
-        use crate::browser::ports::engine::BrowserEnginePort;
         use crate::browser::adapters::mock::MockBrowserEngineAdapter;
+        use crate::browser::ports::engine::BrowserEnginePort;
+        use crate::domain::capability::{Capability, CapabilityPolicy};
         use crate::ports::process::ProcessPort;
         use crate::ports::terminal::TerminalPort;
         use std::env::temp_dir;
 
-        let process: Box<dyn ProcessPort> = Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
-        let terminal: Box<dyn TerminalPort> = Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
+        let process: Box<dyn ProcessPort> =
+            Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
+        let terminal: Box<dyn TerminalPort> =
+            Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
         let sessions = SessionService::new();
         let policy = CapabilityPolicy::new().with(Capability::GraphicsCreate);
         let browser: Box<dyn BrowserEnginePort> = Box::new(MockBrowserEngineAdapter::new());
         let root = temp_dir().join("oko-render-test");
         let _ = std::fs::create_dir_all(root.join("toolchain"));
 
-        IpcServer::new_stdio(
-            process, terminal, sessions, policy, browser, &root,
-        )
+        IpcServer::new_stdio(process, terminal, sessions, policy, browser, &root)
     }
 }

@@ -17,10 +17,7 @@ impl<S: StoragePort> ConfigService<S> {
             Ok(c) => c.clone(),
             Err(_) => Config::default(), // safe defaults for first boot (CFG-009)
         };
-        Ok(Self {
-            storage,
-            last_good,
-        })
+        Ok(Self { storage, last_good })
     }
 
     pub fn load(&mut self) -> Result<Config, ConfigError> {

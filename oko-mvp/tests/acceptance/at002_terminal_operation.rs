@@ -19,15 +19,20 @@ fn pty_shell_accepts_input_renders_output_reports_exit() {
         .expect("input should be written");
 
     // Output is rendered.
-    let output = pty.read_output(&session).expect("output should be readable");
+    let output = pty
+        .read_output(&session)
+        .expect("output should be readable");
     assert_eq!(output, "hello\n");
 
     // Exit status is reported accurately (TERM-008).
-    let status = pty.exit_status(&session).expect("exit status should be reported");
+    let status = pty
+        .exit_status(&session)
+        .expect("exit status should be reported");
     assert_eq!(status, Some(0));
 
     // A failing command reports non-zero.
-    pty.write_input(&session, b"false\n").expect("input written");
+    pty.write_input(&session, b"false\n")
+        .expect("input written");
     let _ = pty.read_output(&session).expect("output readable");
     let status = pty.exit_status(&session).expect("exit status reported");
     assert_eq!(status, Some(1));

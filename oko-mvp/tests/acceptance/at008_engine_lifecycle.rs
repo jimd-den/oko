@@ -27,12 +27,21 @@ fn unavailable_browser_engine_does_not_stop_the_terminal_core() {
     let (transport, run) = run_host(script, Box::new(UnavailableEngine { name: "servo" }));
 
     assert!(run.is_ok(), "host exited with {:?} instead of serving", run);
-    let status = transport.reply_for("host.status").expect("host.status must be answered");
-    assert_eq!(json::get(&status, "core").and_then(json::as_str), Some("running"));
+    let status = transport
+        .reply_for("host.status")
+        .expect("host.status must be answered");
+    assert_eq!(
+        json::get(&status, "core").and_then(json::as_str),
+        Some("running")
+    );
     let created = transport
         .reply_for("host.terminal.create")
         .expect("terminal must still be usable without a browser engine");
-    assert!(json::get(&created, "session_id").is_some(), "reply was {:?}", created);
+    assert!(
+        json::get(&created, "session_id").is_some(),
+        "reply was {:?}",
+        created
+    );
 }
 
 #[test]
@@ -45,7 +54,9 @@ fn unavailable_engine_is_reported_without_silent_fallback() {
     let (transport, run) = run_host(script, Box::new(UnavailableEngine { name: "servo" }));
 
     assert!(run.is_ok(), "host exited with {:?} instead of serving", run);
-    let reply = transport.reply_for("host.browser.engine").expect("engine must be reported");
+    let reply = transport
+        .reply_for("host.browser.engine")
+        .expect("engine must be reported");
     assert_eq!(
         json::get(&reply, "engine").and_then(json::as_str),
         Some("servo"),
@@ -57,8 +68,13 @@ fn unavailable_engine_is_reported_without_silent_fallback() {
         "reply was {:?}",
         reply
     );
-    let reason = json::get(&reply, "reason").and_then(json::as_str).unwrap_or("");
-    assert!(!reason.is_empty(), "an unavailable engine must say why (OBS-003)");
+    let reason = json::get(&reply, "reason")
+        .and_then(json::as_str)
+        .unwrap_or("");
+    assert!(
+        !reason.is_empty(),
+        "an unavailable engine must say why (OBS-003)"
+    );
 }
 
 #[test]
@@ -90,7 +106,9 @@ fn engine_crash_after_startup_keeps_the_terminal_core_serving() {
         transport.reply_for("host.terminal.create").is_some(),
         "the terminal must survive an engine crash (ENG-004)"
     );
-    let engine = transport.reply_for("host.browser.engine").expect("engine reply");
+    let engine = transport
+        .reply_for("host.browser.engine")
+        .expect("engine reply");
     assert_eq!(
         json::get(&engine, "last_crash").and_then(json::as_str),
         Some("renderer process terminated"),

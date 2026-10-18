@@ -41,16 +41,18 @@ impl LinuxPtyAdapter {
 impl TerminalPort for LinuxPtyAdapter {
     fn create_session(&self) -> Result<PtySession, PtyError> {
         let id = {
-            let mut next = self.next_id.lock().map_err(|_| {
-                PtyError::OpenFailed("adapter lock poisoned".into())
-            })?;
+            let mut next = self
+                .next_id
+                .lock()
+                .map_err(|_| PtyError::OpenFailed("adapter lock poisoned".into()))?;
             let id = SessionId(format!("pty-{}", *next));
             *next += 1;
             id
         };
-        let mut sessions = self.sessions.lock().map_err(|_| {
-            PtyError::OpenFailed("adapter lock poisoned".into())
-        })?;
+        let mut sessions = self
+            .sessions
+            .lock()
+            .map_err(|_| PtyError::OpenFailed("adapter lock poisoned".into()))?;
         sessions.insert(
             id.clone(),
             SessionEntry {
@@ -66,12 +68,11 @@ impl TerminalPort for LinuxPtyAdapter {
     fn write_input(&self, session: &PtySession, bytes: &[u8]) -> Result<(), PtyError> {
         let text = std::str::from_utf8(bytes)
             .map_err(|_| PtyError::WriteFailed("invalid utf-8".into()))?;
-        let mut sessions = self.sessions.lock().map_err(|_| {
-            PtyError::WriteFailed("adapter lock poisoned".into())
-        })?;
-        let entry = sessions
-            .get_mut(&session.0)
-            .ok_or(PtyError::SessionGone)?;
+        let mut sessions = self
+            .sessions
+            .lock()
+            .map_err(|_| PtyError::WriteFailed("adapter lock poisoned".into()))?;
+        let entry = sessions.get_mut(&session.0).ok_or(PtyError::SessionGone)?;
         if !entry.open {
             return Err(PtyError::SessionGone);
         }
@@ -80,12 +81,11 @@ impl TerminalPort for LinuxPtyAdapter {
     }
 
     fn read_output(&self, session: &PtySession) -> Result<String, PtyError> {
-        let mut sessions = self.sessions.lock().map_err(|_| {
-            PtyError::ReadFailed("adapter lock poisoned".into())
-        })?;
-        let entry = sessions
-            .get_mut(&session.0)
-            .ok_or(PtyError::SessionGone)?;
+        let mut sessions = self
+            .sessions
+            .lock()
+            .map_err(|_| PtyError::ReadFailed("adapter lock poisoned".into()))?;
+        let entry = sessions.get_mut(&session.0).ok_or(PtyError::SessionGone)?;
         if !entry.open {
             return Err(PtyError::SessionGone);
         }
@@ -110,12 +110,11 @@ impl TerminalPort for LinuxPtyAdapter {
     }
 
     fn exit_status(&self, session: &PtySession) -> Result<Option<i32>, PtyError> {
-        let sessions = self.sessions.lock().map_err(|_| {
-            PtyError::ReadFailed("adapter lock poisoned".into())
-        })?;
-        let entry = sessions
-            .get(&session.0)
-            .ok_or(PtyError::SessionGone)?;
+        let sessions = self
+            .sessions
+            .lock()
+            .map_err(|_| PtyError::ReadFailed("adapter lock poisoned".into()))?;
+        let entry = sessions.get(&session.0).ok_or(PtyError::SessionGone)?;
         Ok(entry.last_exit)
     }
 }

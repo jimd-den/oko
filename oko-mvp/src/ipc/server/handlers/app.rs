@@ -7,7 +7,9 @@ use crate::ipc::server::IpcServer;
 use crate::ipc::transport::IpcTransport;
 use crate::ports::process::SpawnRequest;
 
-pub fn handle_list<T: IpcTransport>(server: &IpcServer<T>) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle_list<T: IpcTransport>(
+    server: &IpcServer<T>,
+) -> Result<crate::ipc::json::JsonValue, String> {
     let sessions_list: Vec<String> = server
         .sessions
         .list()
@@ -80,16 +82,27 @@ mod tests {
         let mut server = test_server();
         let payload = crate::ipc::json::object(vec![("id".into(), str("calc"))]);
         let result = handle_launch(&mut server, &payload).unwrap();
-        let id = crate::ipc::json::get(&result, "id").and_then(crate::ipc::json::as_str).unwrap();
+        let id = crate::ipc::json::get(&result, "id")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap();
         assert_eq!(id, "calc");
     }
 
     #[test]
     fn handle_stop_removes_session() {
         let mut server = test_server();
-        let _ = handle_launch(&mut server, &crate::ipc::json::object(vec![("id".into(), str("calc"))]));
-        let result = handle_stop(&mut server, &crate::ipc::json::object(vec![("id".into(), str("calc"))])).unwrap();
-        let id = crate::ipc::json::get(&result, "id").and_then(crate::ipc::json::as_str).unwrap();
+        let _ = handle_launch(
+            &mut server,
+            &crate::ipc::json::object(vec![("id".into(), str("calc"))]),
+        );
+        let result = handle_stop(
+            &mut server,
+            &crate::ipc::json::object(vec![("id".into(), str("calc"))]),
+        )
+        .unwrap();
+        let id = crate::ipc::json::get(&result, "id")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap();
         assert_eq!(id, "calc");
     }
 
@@ -99,23 +112,23 @@ mod tests {
 
     fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
         use crate::application::session_service::SessionService;
-        use crate::domain::capability::{Capability, CapabilityPolicy};
-        use crate::browser::ports::engine::BrowserEnginePort;
         use crate::browser::adapters::mock::MockBrowserEngineAdapter;
+        use crate::browser::ports::engine::BrowserEnginePort;
+        use crate::domain::capability::{Capability, CapabilityPolicy};
         use crate::ports::process::ProcessPort;
         use crate::ports::terminal::TerminalPort;
         use std::env::temp_dir;
 
-        let process: Box<dyn ProcessPort> = Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
-        let terminal: Box<dyn TerminalPort> = Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
+        let process: Box<dyn ProcessPort> =
+            Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
+        let terminal: Box<dyn TerminalPort> =
+            Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
         let sessions = SessionService::new();
         let policy = CapabilityPolicy::new().with(Capability::ProcessSpawn);
         let browser: Box<dyn BrowserEnginePort> = Box::new(MockBrowserEngineAdapter::new());
         let root = temp_dir().join("oko-app-test");
         let _ = std::fs::create_dir_all(root.join("toolchain"));
 
-        IpcServer::new_stdio(
-            process, terminal, sessions, policy, browser, &root,
-        )
+        IpcServer::new_stdio(process, terminal, sessions, policy, browser, &root)
     }
 }

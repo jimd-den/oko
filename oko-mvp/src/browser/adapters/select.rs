@@ -34,7 +34,10 @@ pub fn engine_for(name: &str) -> Box<dyn BrowserEnginePort> {
         "blink" => Box::new(super::blink::BlinkBrowserEngineAdapter::new()),
         #[cfg(feature = "servo")]
         "servo" => Box::new(super::servo::ServoBrowserEngineAdapter::new()),
-        other => Box::new(UnavailableBrowserEngine::new(other, &unavailable_reason(other))),
+        other => Box::new(UnavailableBrowserEngine::new(
+            other,
+            &unavailable_reason(other),
+        )),
     }
 }
 

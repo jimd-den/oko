@@ -57,7 +57,7 @@ fn format_object(entries: &[(String, JsonValue)]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ipc::json::{object, str, num, bool, arr, get, as_str};
+    use crate::ipc::json::{arr, as_str, bool, get, num, object, str};
 
     #[test]
     fn stringify_null() {
@@ -88,7 +88,10 @@ mod tests {
 
     #[test]
     fn stringify_object() {
-        assert_eq!(stringify(&object(vec![("a".into(), num(1.0))])), "{\"a\":1}");
+        assert_eq!(
+            stringify(&object(vec![("a".into(), num(1.0))])),
+            "{\"a\":1}"
+        );
     }
 
     #[test]

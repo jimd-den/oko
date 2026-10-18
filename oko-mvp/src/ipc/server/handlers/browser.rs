@@ -19,7 +19,10 @@ pub fn handle_open<T: IpcTransport>(
         url: Some(url.clone()),
         off_the_record: false,
     };
-    let _session = server.browser.create_session(config).map_err(|e| format!("{:?}", e))?;
+    let _session = server
+        .browser
+        .create_session(config)
+        .map_err(|e| format!("{:?}", e))?;
     Ok(object(vec![("url".into(), str(&url))]))
 }
 
@@ -28,11 +31,16 @@ pub fn handle_open<T: IpcTransport>(
 /// `state` is `ready` or `unavailable`; an unavailable engine also carries the
 /// `reason`, so a caller can tell a missing engine from a working one instead
 /// of receiving a single ambiguous OK.
-pub fn handle_engine<T: IpcTransport>(server: &IpcServer<T>) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle_engine<T: IpcTransport>(
+    server: &IpcServer<T>,
+) -> Result<crate::ipc::json::JsonValue, String> {
     let mut fields = vec![
         ("engine".into(), str(server.browser.engine_name())),
         ("version".into(), str(server.browser.engine_version())),
-        ("experimental".into(), bool(server.browser.is_experimental())),
+        (
+            "experimental".into(),
+            bool(server.browser.is_experimental()),
+        ),
     ];
     match &server.engine_unavailable {
         Some(reason) => {
@@ -49,12 +57,17 @@ pub fn handle_engine<T: IpcTransport>(server: &IpcServer<T>) -> Result<crate::ip
     Ok(object(fields))
 }
 
-pub fn handle_capabilities<T: IpcTransport>(server: &IpcServer<T>) -> Result<crate::ipc::json::JsonValue, String> {
+pub fn handle_capabilities<T: IpcTransport>(
+    server: &IpcServer<T>,
+) -> Result<crate::ipc::json::JsonValue, String> {
     let caps = server.browser.capabilities();
     Ok(object(vec![
         ("supports_js".into(), bool(caps.supports_js)),
         ("supports_downloads".into(), bool(caps.supports_downloads)),
-        ("supports_permissions".into(), bool(caps.supports_permissions)),
+        (
+            "supports_permissions".into(),
+            bool(caps.supports_permissions),
+        ),
         ("is_experimental".into(), bool(caps.is_experimental)),
     ]))
 }
@@ -83,7 +96,9 @@ mod tests {
         let mut server = test_server();
         let payload = crate::ipc::json::object(vec![("url".into(), str("https://example.com"))]);
         let result = handle_open(&mut server, &payload).unwrap();
-        let url = crate::ipc::json::get(&result, "url").and_then(crate::ipc::json::as_str).unwrap();
+        let url = crate::ipc::json::get(&result, "url")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap();
         assert_eq!(url, "https://example.com");
     }
 
@@ -91,7 +106,9 @@ mod tests {
     fn handle_engine_returns_mock() {
         let server = test_server();
         let result = handle_engine(&server).unwrap();
-        let engine = crate::ipc::json::get(&result, "engine").and_then(crate::ipc::json::as_str).unwrap();
+        let engine = crate::ipc::json::get(&result, "engine")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap();
         assert_eq!(engine, "mock");
     }
 
@@ -99,7 +116,9 @@ mod tests {
     fn handle_engine_reports_ready_state_before_any_failure() {
         let server = test_server();
         let result = handle_engine(&server).unwrap();
-        let state = crate::ipc::json::get(&result, "state").and_then(crate::ipc::json::as_str).unwrap();
+        let state = crate::ipc::json::get(&result, "state")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap();
         assert_eq!(state, "ready");
     }
 
@@ -107,7 +126,9 @@ mod tests {
     fn handle_capabilities_returns_flags() {
         let server = test_server();
         let result = handle_capabilities(&server).unwrap();
-        let js = crate::ipc::json::get(&result, "supports_js").and_then(crate::ipc::json::as_bool).unwrap();
+        let js = crate::ipc::json::get(&result, "supports_js")
+            .and_then(crate::ipc::json::as_bool)
+            .unwrap();
         assert!(js);
     }
 
@@ -117,23 +138,23 @@ mod tests {
 
     fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
         use crate::application::session_service::SessionService;
-        use crate::domain::capability::{Capability, CapabilityPolicy};
-        use crate::browser::ports::engine::BrowserEnginePort;
         use crate::browser::adapters::mock::MockBrowserEngineAdapter;
+        use crate::browser::ports::engine::BrowserEnginePort;
+        use crate::domain::capability::{Capability, CapabilityPolicy};
         use crate::ports::process::ProcessPort;
         use crate::ports::terminal::TerminalPort;
         use std::env::temp_dir;
 
-        let process: Box<dyn ProcessPort> = Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
-        let terminal: Box<dyn TerminalPort> = Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
+        let process: Box<dyn ProcessPort> =
+            Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
+        let terminal: Box<dyn TerminalPort> =
+            Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
         let sessions = SessionService::new();
         let policy = CapabilityPolicy::new().with(Capability::BrowserNavigate);
         let browser: Box<dyn BrowserEnginePort> = Box::new(MockBrowserEngineAdapter::new());
         let root = temp_dir().join("oko-browser-test");
         let _ = std::fs::create_dir_all(root.join("toolchain"));
 
-        IpcServer::new_stdio(
-            process, terminal, sessions, policy, browser, &root,
-        )
+        IpcServer::new_stdio(process, terminal, sessions, policy, browser, &root)
     }
 }

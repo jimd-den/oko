@@ -8,10 +8,20 @@ use std::process::Command;
 
 /// Select a downloader: prefer curl, then wget.
 fn select_downloader() -> Option<Vec<String>> {
-    if Command::new("curl").arg("--version").status().map(|s| s.success()).unwrap_or(false) {
+    if Command::new("curl")
+        .arg("--version")
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+    {
         return Some(vec!["curl".into(), "-L".into(), "--fail".into()]);
     }
-    if Command::new("wget").arg("--version").status().map(|s| s.success()).unwrap_or(false) {
+    if Command::new("wget")
+        .arg("--version")
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+    {
         return Some(vec!["wget".into(), "-O".into(), "__tmp__".into()]);
     }
     None

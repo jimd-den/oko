@@ -7,9 +7,7 @@ use crate::ipc::server::IpcServer;
 use crate::ipc::transport::IpcTransport;
 
 use crate::ipc::server::capabilities;
-use crate::ipc::server::handlers::{
-    app, blink, browser, render, status, terminal, ui,
-};
+use crate::ipc::server::handlers::{app, blink, browser, render, status, terminal, ui};
 
 pub fn handle_message<T: IpcTransport>(server: &mut IpcServer<T>, msg: &Message) -> Message {
     if msg.version != IPC_VERSION {
@@ -32,7 +30,10 @@ pub fn handle_message<T: IpcTransport>(server: &mut IpcServer<T>, msg: &Message)
     }
 }
 
-fn dispatch_request<T: IpcTransport>(server: &mut IpcServer<T>, msg: &Message) -> Result<crate::ipc::json::JsonValue, String> {
+fn dispatch_request<T: IpcTransport>(
+    server: &mut IpcServer<T>,
+    msg: &Message,
+) -> Result<crate::ipc::json::JsonValue, String> {
     // Enforced here, before any handler runs, so a route cannot forget its own
     // check and a caller cannot grant itself anything (SRD SEC-002, §8.3).
     let required = capabilities::required_for(&msg.route);

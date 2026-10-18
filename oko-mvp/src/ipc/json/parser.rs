@@ -109,8 +109,11 @@ fn parse_number(s: &[u8], i: usize) -> ParseResult {
             i += 1;
         }
     }
-    let text = std::str::from_utf8(&s[start..i]).map_err(|_| JsonError("invalid number utf8".into()))?;
-    let n: f64 = text.parse().map_err(|_| JsonError("invalid number".into()))?;
+    let text =
+        std::str::from_utf8(&s[start..i]).map_err(|_| JsonError("invalid number utf8".into()))?;
+    let n: f64 = text
+        .parse()
+        .map_err(|_| JsonError("invalid number".into()))?;
     Ok((JsonValue::Number(n), i))
 }
 
@@ -135,10 +138,13 @@ fn parse_object(s: &[u8], mut i: usize) -> ParseResult {
         }
         let (val, ni) = parse_value(s, i + 1)?;
         i = ni;
-        entries.push((match key {
-            JsonValue::String(k) => k,
-            _ => return Err(JsonError("object key must be string".into())),
-        }, val));
+        entries.push((
+            match key {
+                JsonValue::String(k) => k,
+                _ => return Err(JsonError("object key must be string".into())),
+            },
+            val,
+        ));
         i = skip_ws(s, i);
         if i < s.len() && s[i] == b',' {
             i += 1;

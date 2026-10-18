@@ -97,7 +97,10 @@ impl StoragePort for FileStorageAdapter {
                 "graphics.preferred_backend={}",
                 config.graphics.preferred_backend
             ),
-            format!("graphics.software_fallback={}", config.graphics.software_fallback),
+            format!(
+                "graphics.software_fallback={}",
+                config.graphics.software_fallback
+            ),
             format!("boot.start_desktop={}", config.boot.start_desktop),
             format!("boot.recovery_enabled={}", config.boot.recovery_enabled),
         ];
