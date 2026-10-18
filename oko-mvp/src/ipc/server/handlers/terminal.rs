@@ -1,0 +1,101 @@
+//! Handler: host.terminal.create / host.terminal.read.
+//! Small composable functions, single responsibility each.
+
+use crate::domain::session::SessionId;
+use crate::ipc::json::object;
+use crate::ipc::server::IpcServer;
+use crate::ipc::transport::IpcTransport;
+
+pub fn handle_create<T: IpcTransport>(server: &mut IpcServer<T>) -> Result<crate::ipc::json::JsonValue, String> {
+    let id = SessionId(format!("pty-{}", next_id()));
+    server
+        .sessions
+        .create_terminal(server.terminal.as_ref(), id.clone())
+        .map_err(|e| format!("{:?}", e))?;
+    Ok(object(vec![("session_id".into(), str(&id.0))]))
+}
+
+pub fn handle_read<T: IpcTransport>(
+    server: &mut IpcServer<T>,
+    payload: &crate::ipc::json::JsonValue,
+) -> Result<crate::ipc::json::JsonValue, String> {
+    let session_id = payload_string(payload, "session_id")?;
+    let pty_session = server
+        .sessions
+        .pty(&SessionId(session_id))
+        .ok_or("session not found")?
+        .clone();
+    let output = server
+        .terminal
+        .read_output(&pty_session)
+        .map_err(|e| format!("{:?}", e))?;
+    Ok(object(vec![("output".into(), str(&output))]))
+}
+
+fn str(v: &str) -> crate::ipc::json::JsonValue {
+    crate::ipc::json::JsonValue::String(v.into())
+}
+
+fn payload_string(payload: &crate::ipc::json::JsonValue, key: &str) -> Result<String, String> {
+    match crate::ipc::json::get(payload, key).and_then(crate::ipc::json::as_str) {
+        Some(s) => Ok(s.into()),
+        None => Err(format!("missing payload field: {}", key)),
+    }
+}
+
+fn next_id() -> u64 {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(100);
+    NEXT.fetch_add(1, Ordering::Relaxed)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn handle_create_returns_session_id() {
+        let mut server = test_server();
+        let result = handle_create(&mut server).unwrap();
+        let session_id = crate::ipc::json::get(&result, "session_id").and_then(crate::ipc::json::as_str).unwrap();
+        assert!(session_id.starts_with("pty-"));
+    }
+
+    #[test]
+    fn handle_read_missing_session_errors() {
+        let mut server = test_server();
+        let payload = crate::ipc::json::object(vec![("session_id".into(), str("nonexistent"))]);
+        let result = handle_read(&mut server, &payload);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn next_id_increments() {
+        let _ = next_id();
+        let first = next_id();
+        let second = next_id();
+        assert!(second > first);
+    }
+
+    fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
+        use crate::application::session_service::SessionService;
+        use crate::domain::capability::{Capability, CapabilityPolicy};
+        use crate::browser::ports::engine::BrowserEnginePort;
+        use crate::browser::adapters::mock::MockBrowserEngineAdapter;
+        use crate::ports::process::ProcessPort;
+        use crate::ports::terminal::TerminalPort;
+        use std::env::temp_dir;
+
+        let process: Box<dyn ProcessPort> = Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
+        let terminal: Box<dyn TerminalPort> = Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
+        let sessions = SessionService::new();
+        let policy = CapabilityPolicy::new().with(Capability::TerminalCreate);
+        let browser: Box<dyn BrowserEnginePort> = Box::new(MockBrowserEngineAdapter::new());
+        let root = temp_dir().join("oko-terminal-test");
+        let _ = std::fs::create_dir_all(root.join("toolchain"));
+
+        IpcServer::new_stdio(
+            process, terminal, sessions, policy, browser, &root,
+        )
+    }
+}

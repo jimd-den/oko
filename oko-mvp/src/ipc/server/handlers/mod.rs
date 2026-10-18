@@ -1,0 +1,9 @@
+//! IPC request handlers — re-exports.
+
+pub mod app;
+pub mod blink;
+pub mod browser;
+pub mod render;
+pub mod status;
+pub mod terminal;
+pub mod ui;
