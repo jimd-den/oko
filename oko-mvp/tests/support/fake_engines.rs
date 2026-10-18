@@ -105,15 +105,22 @@ impl BrowserEnginePort for CrashingEngine {
     }
 }
 
-/// Run the host over a scripted transport and return what it answered.
+/// Run the host with the capabilities a desktop session is expected to hold.
 pub fn run_host(
     script: Vec<Message>,
     engine: Box<dyn BrowserEnginePort>,
 ) -> (ScriptedTransport, Result<(), String>) {
+    run_host_with_policy(script, engine, desktop_policy())
+}
+
+/// Run the host with a policy of the test's choosing, so a test can prove that
+/// an unpermitted call is refused by the host itself (SRD SEC-002, AT-005).
+pub fn run_host_with_policy(
+    script: Vec<Message>,
+    engine: Box<dyn BrowserEnginePort>,
+    policy: CapabilityPolicy,
+) -> (ScriptedTransport, Result<(), String>) {
     let transport = ScriptedTransport::new(script);
-    let policy = CapabilityPolicy::new()
-        .with(Capability::TerminalCreate)
-        .with(Capability::BrowserNavigate);
     let bus = MessageBus::new(transport.clone());
     let mut server = IpcServer::new(
         bus,
@@ -126,4 +133,10 @@ pub fn run_host(
     );
     let result = server.run();
     (transport, result)
+}
+
+fn desktop_policy() -> CapabilityPolicy {
+    CapabilityPolicy::new()
+        .with(Capability::TerminalCreate)
+        .with(Capability::BrowserNavigate)
 }

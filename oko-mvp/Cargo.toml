@@ -65,3 +65,8 @@ path = "tests/acceptance/at008_engine_lifecycle.rs"
 [[test]]
 name = "at009_engine_compatibility"
 path = "tests/acceptance/at009_engine_compatibility.rs"
+
+[[test]]
+name = "at005_host_api_capability_enforcement"
+path = "tests/acceptance/at005_host_api_capability_enforcement.rs"
+

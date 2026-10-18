@@ -11,6 +11,7 @@ use crate::ports::process::ProcessPort;
 use crate::ports::terminal::TerminalPort;
 use std::path::Path;
 
+mod capabilities;
 mod dispatch;
 mod handlers;
 
@@ -19,7 +20,7 @@ pub struct IpcServer<T: IpcTransport> {
     process: Box<dyn ProcessPort>,
     terminal: Box<dyn TerminalPort>,
     sessions: SessionService,
-    _policy: CapabilityPolicy,
+    policy: CapabilityPolicy,
     browser: Box<dyn BrowserEnginePort>,
     blink_installer: BlinkInstaller,
     desktop_mode: bool,
@@ -35,7 +36,7 @@ impl<T: IpcTransport> IpcServer<T> {
         process: Box<dyn ProcessPort>,
         terminal: Box<dyn TerminalPort>,
         sessions: SessionService,
-        _policy: CapabilityPolicy,
+        policy: CapabilityPolicy,
         browser: Box<dyn BrowserEnginePort>,
         blink_installer: BlinkInstaller,
     ) -> Self {
@@ -44,7 +45,7 @@ impl<T: IpcTransport> IpcServer<T> {
             process,
             terminal,
             sessions,
-            _policy,
+            policy,
             browser,
             blink_installer,
             desktop_mode: false,
@@ -94,12 +95,12 @@ impl IpcServer<crate::ipc::transport::StdioTransport> {
         process: Box<dyn ProcessPort>,
         terminal: Box<dyn TerminalPort>,
         sessions: SessionService,
-        _policy: CapabilityPolicy,
+        policy: CapabilityPolicy,
         browser: Box<dyn BrowserEnginePort>,
         workspace_root: &Path,
     ) -> Self {
         let bus = MessageBus::new(crate::ipc::transport::StdioTransport::new());
         let blink_installer = BlinkInstaller::new(workspace_root);
-        Self::new(bus, process, terminal, sessions, _policy, browser, blink_installer)
+        Self::new(bus, process, terminal, sessions, policy, browser, blink_installer)
     }
 }
