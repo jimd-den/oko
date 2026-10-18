@@ -44,7 +44,7 @@ impl<S: StoragePort> ConfigService<S> {
     /// Validate before applying; unknown/invalid security-sensitive values fail
     /// safely rather than silently weakening policy (CFG-002, CFG-005).
     fn validate(&self, cfg: &Config) -> Result<(), ConfigError> {
-        if cfg.browser.downloads_require_confirmation == false {
+        if !cfg.browser.downloads_require_confirmation {
             return Err(ConfigError::InvalidValue {
                 key: "browser.downloads_require_confirmation".into(),
                 reason: "must remain true; silent weakening prohibited".into(),

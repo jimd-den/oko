@@ -10,6 +10,12 @@ pub struct SessionService {
     pty_handles: std::collections::HashMap<SessionId, PtySession>,
 }
 
+impl Default for SessionService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SessionService {
     pub fn new() -> Self {
         Self {

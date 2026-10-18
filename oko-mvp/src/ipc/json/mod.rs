@@ -47,7 +47,7 @@ pub fn get<'a>(obj: &'a JsonValue, key: &str) -> Option<&'a JsonValue> {
     }
 }
 
-pub fn as_str<'a>(v: &'a JsonValue) -> Option<&'a str> {
+pub fn as_str(v: &JsonValue) -> Option<&str> {
     match v {
         JsonValue::String(s) => Some(s),
         _ => None,

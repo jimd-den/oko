@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn stringify_number() {
         assert_eq!(stringify(&num(42.0)), "42");
-        assert_eq!(stringify(&num(3.14)), "3.14");
+        assert_eq!(stringify(&num(1.5)), "1.5");
     }
 
     #[test]

@@ -86,7 +86,11 @@ mod tests {
     #[test]
     fn handle_capture_writes_file() {
         let mut server = test_server();
-        let out = std::env::temp_dir().join("oko-render-capture-handler-test.ppm");
+        // Per-process name: a fixed path in the shared temp directory is a race
+        // between two test processes that write and delete the same file, which
+        // is how this test flakes (AGENTS.md §2.5, determinism).
+        let out = std::env::temp_dir()
+            .join(format!("oko-render-capture-handler-test-{}.ppm", std::process::id()));
         let _ = std::fs::remove_file(&out);
         let payload = crate::ipc::json::object(vec![("path".into(), str(&out.to_string_lossy()))]);
         let result = handle_capture(&mut server, &payload);

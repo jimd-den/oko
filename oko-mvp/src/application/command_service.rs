@@ -49,6 +49,12 @@ pub struct CommandService {
     next_pid: u64,
 }
 
+impl Default for CommandService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CommandService {
     pub fn new() -> Self {
         Self {

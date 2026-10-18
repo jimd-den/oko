@@ -79,10 +79,6 @@ mod tests {
         assert!(result.is_err());
     }
 
-    fn str(v: &str) -> crate::ipc::json::JsonValue {
-        crate::ipc::json::JsonValue::String(v.into())
-    }
-
     fn test_server() -> IpcServer<crate::ipc::transport::StdioTransport> {
         use crate::application::session_service::SessionService;
         use crate::domain::capability::{Capability, CapabilityPolicy};

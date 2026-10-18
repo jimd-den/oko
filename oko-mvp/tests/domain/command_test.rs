@@ -58,16 +58,13 @@ fn parse_exit() {
 
 #[test]
 fn parse_unknown_command() {
-    assert!(matches!(
-        parse_command("frobnicate"),
-        Err(_)
-    ));
+    assert!(parse_command("frobnicate").is_err());
 }
 
 #[test]
 fn parse_empty_input() {
-    assert!(matches!(parse_command(""), Err(_)));
-    assert!(matches!(parse_command("   "), Err(_)));
+    assert!(parse_command("").is_err());
+    assert!(parse_command("   ").is_err());
 }
 
 // Cycle 2: validate_command — capability enforcement.
@@ -86,10 +83,7 @@ fn validate_app_launch_denied_without_spawn() {
     let cmd = Command::AppLaunch {
         id: "terminal".into(),
     };
-    assert!(matches!(
-        validate_command(&cmd, &policy),
-        Err(_)
-    ));
+    assert!(validate_command(&cmd, &policy).is_err());
 }
 
 #[test]
@@ -98,10 +92,7 @@ fn validate_browser_navigate_denied_without_browser_cap() {
     let cmd = Command::BrowserOpen {
         url: "https://example.com".into(),
     };
-    assert!(matches!(
-        validate_command(&cmd, &policy),
-        Err(_)
-    ));
+    assert!(validate_command(&cmd, &policy).is_err());
 }
 
 #[test]
