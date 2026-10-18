@@ -70,3 +70,7 @@ path = "tests/acceptance/at009_engine_compatibility.rs"
 name = "at005_host_api_capability_enforcement"
 path = "tests/acceptance/at005_host_api_capability_enforcement.rs"
 
+[[test]]
+name = "meta_line_budget"
+path = "tests/meta/line_budget.rs"
+

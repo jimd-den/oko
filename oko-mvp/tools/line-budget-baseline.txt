@@ -1,0 +1,9 @@
+# Frozen file sizes for files that predate the 200-line ceiling (AGENTS.md §4.6).
+#
+# Format: <path> <lines>, one per line, path relative to this repo's root.
+# Rules: no new entries; a file you touch must not grow; the total only shrinks.
+# Shrinking a file by splitting it means lowering its number, and deleting the
+# entry once the file is gone or under the ceiling.
+#
+# This file is empty on purpose: every source file in the tree is already within
+# the ceiling. Keep it that way.
