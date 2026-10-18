@@ -23,3 +23,7 @@ pub mod servo;
 // Blink install flow (download → verify checksum → build). Always available.
 // Never runs silently at compile time; invoked via `blink install` (SRD DEP-002).
 pub mod blink_install;
+
+// Prebuilt engine binary: locate, install and launch a released engine archive
+// (SRD §14, DEP-002). Always available; install is an explicit host action.
+pub mod engine_binary;

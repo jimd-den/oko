@@ -14,3 +14,8 @@ Cargo.lock
 
 # Editor swap files
 *.swp
+
+# Fetched engine releases and their archives: pinned in toolchain/versions.lock,
+# verified on install, never committed (SRD DEP-002, §14).
+third_party/
+downloads/

@@ -6,7 +6,7 @@
 
 /// SHA-256 digest as 32 bytes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) struct Sha256([u8; 32]);
+pub(crate) struct Sha256([u8; 32]);
 
 impl Sha256 {
     pub fn hex(&self) -> String {
@@ -15,7 +15,7 @@ impl Sha256 {
 }
 
 /// Pure-Rust SHA-256 (FIPS 180-4). No external crates.
-pub(super) fn sha256(data: &[u8]) -> Sha256 {
+pub(crate) fn sha256(data: &[u8]) -> Sha256 {
     let mut h: [u32; 8] = [
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
         0x5be0cd19,

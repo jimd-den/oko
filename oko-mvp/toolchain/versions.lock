@@ -74,3 +74,23 @@ upstream_project = "Microsoft"
 role = "Required Windows graphics backends"
 target_platforms = ["windows"]
 license = "MIT / MS-RL (Windows SDK)"
+
+# Prebuilt engine releases (SRD §2.1, §5.2). Servo publishes ready-to-run
+# archives, so the engine is fetched and unpacked rather than built from source:
+# the digest below is the published one for this exact asset.
+[servo]
+component = "Servo"
+upstream_project = "Servo"
+role = "Experimental alternative browser engine, and the engine this host can actually run"
+source_url = "https://github.com/servo/servo/releases/download/v0.7.0/servo-aarch64-linux-gnu.tar.gz"
+pinned_revision = "v0.7.0"
+source_checksum_sha256 = "034f66ec113fcf7ced0534cba2899b6bc578402309ad4bddb69e5803587f5513"
+archive_kind = "tar.gz"
+license = "MPL-2.0"
+build_configuration = "prebuilt release archive"
+target_platforms = ["linux-aarch64"]
+security_advisory_tracking = "Servo security advisories"
+local_patches = []
+patch_rationale = "none"
+update_owner = "platform-team"
+rollback_procedure = "Remove third_party/engines/servo and revert versions.lock to the previous revision"
