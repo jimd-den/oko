@@ -15,10 +15,15 @@ edition = "2021"
 # (approved upstream build process, pinned revision, verified checksum) and
 # linked via the adapter's embedder-interface declarations below.
 #
-# Default (no features): mock/dev engine only. Core builds offline with zero
-# external crates.
+# Default (no features): the core builds offline with zero external crates and
+# can serve the `mock` dev engine. Which engine serves is chosen by name at
+# startup (`--engine <name>`, else the profile's `[browser] engine`); a name
+# this build does not contain is reported as unavailable rather than replaced
+# by another engine (SRD ENG-002, ENG-008).
 # --features blink:  includes the blink adapter declarations (still requires
 #                    a separately built Chromium embedder to link).
+# --features servo:  includes the servo adapter declarations (still requires
+#                    a separately built Servo checkout to link).
 
 [[bin]]
 name = "oko-host"
@@ -29,6 +34,7 @@ path = "src/main.rs"
 [features]
 default = []
 blink = []
+servo = []
 
 [dev-dependencies]
 
@@ -55,3 +61,7 @@ path = "tests/acceptance/at019_offline_core_tests.rs"
 [[test]]
 name = "at008_engine_lifecycle"
 path = "tests/acceptance/at008_engine_lifecycle.rs"
+
+[[test]]
+name = "at009_engine_compatibility"
+path = "tests/acceptance/at009_engine_compatibility.rs"

@@ -1,62 +1,16 @@
-//! Test support: an in-memory IPC transport.
+//! Shared test doubles for the host's IPC and browser-engine boundaries.
 //!
-//! The stdio transport reads a real terminal, so it cannot be driven from a
-//! test. This double lets a test script the host's incoming messages and read
-//! back every message the host sent, so the whole message loop runs in-process.
+//! Integration tests are separate crates, so they cannot share a module the
+//! ordinary way. A test file loads this package with
+//! `#[path = "../support/mod.rs"] mod support;`.
 //!
-//! Hazard: `recv` returns "eof" once the script is exhausted, which is what
-//! stops the host loop. Always end a script with `host.shutdown` or let it run
-//! out; a test that appends to the script afterwards will hang.
+//! Every test crate compiles this package separately, so a helper one test file
+//! uses looks dead to the others. That is the reason for the crate-level allow
+//! rather than a pile of per-item attributes.
 
-use oko_core::ipc::json::JsonValue;
-use oko_core::ipc::message::Message;
-use oko_core::ipc::transport::IpcTransport;
-use std::collections::VecDeque;
-use std::sync::{Arc, Mutex};
+#![allow(dead_code)]
 
-#[derive(Default)]
-struct Script {
-    incoming: VecDeque<Message>,
-    sent: Vec<Message>,
-}
-
-#[derive(Clone, Default)]
-pub struct ScriptedTransport {
-    script: Arc<Mutex<Script>>,
-}
-
-impl ScriptedTransport {
-    pub fn new(incoming: Vec<Message>) -> Self {
-        let transport = Self::default();
-        transport.script.lock().unwrap().incoming = incoming.into();
-        transport
-    }
-
-    /// The payload of the host's successful reply to `route`.
-    pub fn reply_for(&self, route: &str) -> Option<JsonValue> {
-        let reply_route = format!("{}.reply", route);
-        self.script
-            .lock()
-            .unwrap()
-            .sent
-            .iter()
-            .find(|m| m.route == reply_route && m.error.is_none())
-            .map(|m| m.payload.clone())
-    }
-}
-
-impl IpcTransport for ScriptedTransport {
-    fn send(&self, msg: &Message) -> Result<(), String> {
-        self.script.lock().unwrap().sent.push(msg.clone());
-        Ok(())
-    }
-
-    fn recv(&self) -> Result<Message, String> {
-        self.script
-            .lock()
-            .unwrap()
-            .incoming
-            .pop_front()
-            .ok_or_else(|| "eof".into())
-    }
-}
+pub mod engine_conformance;
+pub mod host_binary;
+pub mod fake_engines;
+pub mod scripted_transport;

@@ -41,6 +41,11 @@ pub fn handle_engine<T: IpcTransport>(server: &IpcServer<T>) -> Result<crate::ip
         }
         None => fields.push(("state".into(), str("ready"))),
     }
+    // A crash after a good start leaves the engine "ready" but not trustworthy;
+    // reporting the reason is what makes it visible (SRD OBS-003, ENG-004).
+    if let Some(crash) = server.browser.last_crash_reason() {
+        fields.push(("last_crash".into(), str(&crash)));
+    }
     Ok(object(fields))
 }
 
@@ -49,6 +54,7 @@ pub fn handle_capabilities<T: IpcTransport>(server: &IpcServer<T>) -> Result<cra
     Ok(object(vec![
         ("supports_js".into(), bool(caps.supports_js)),
         ("supports_downloads".into(), bool(caps.supports_downloads)),
+        ("supports_permissions".into(), bool(caps.supports_permissions)),
         ("is_experimental".into(), bool(caps.is_experimental)),
     ]))
 }

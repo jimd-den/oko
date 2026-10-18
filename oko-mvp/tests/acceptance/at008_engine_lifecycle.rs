@@ -12,81 +12,9 @@
 #[path = "../support/mod.rs"]
 mod support;
 
-use oko_core::adapters::{linux_process::LinuxProcessAdapter, linux_pty::LinuxPtyAdapter};
-use oko_core::application::session_service::SessionService;
-use oko_core::browser::adapters::blink_install::BlinkInstaller;
-use oko_core::browser::ports::engine::{
-    BackendCapabilities, BrowserConfig, BrowserEnginePort, BrowserError, BrowserSession,
-};
-use oko_core::domain::capability::{Capability, CapabilityPolicy};
 use oko_core::ipc::json::{self, object};
 use oko_core::ipc::message::Message;
-use oko_core::ipc::server::IpcServer;
-use oko_core::ipc::transport::MessageBus;
-use std::path::PathBuf;
-use support::ScriptedTransport;
-
-/// Stands in for an engine that cannot start: an unlinked Servo or Blink
-/// build, or an engine this build does not contain. It keeps reporting its own
-/// name so that a silent substitution by another engine is visible in a test.
-struct UnavailableEngine {
-    name: &'static str,
-}
-
-impl BrowserEnginePort for UnavailableEngine {
-    fn initialize(&self) -> Result<(), BrowserError> {
-        Err(BrowserError::EngineUnavailable("embedder not linked".into()))
-    }
-    fn shutdown(&self) -> Result<(), BrowserError> {
-        Ok(())
-    }
-    fn engine_name(&self) -> &str {
-        self.name
-    }
-    fn engine_version(&self) -> &str {
-        "unlinked"
-    }
-    fn is_experimental(&self) -> bool {
-        true
-    }
-    fn capabilities(&self) -> BackendCapabilities {
-        BackendCapabilities::default()
-    }
-    fn create_session(&self, _config: BrowserConfig) -> Result<BrowserSession, BrowserError> {
-        Err(BrowserError::EngineUnavailable("embedder not linked".into()))
-    }
-    fn navigate(&self, _session: &BrowserSession, _url: &str) -> Result<(), BrowserError> {
-        Err(BrowserError::EngineUnavailable("embedder not linked".into()))
-    }
-    fn close_session(&self, _session: &BrowserSession) -> Result<(), BrowserError> {
-        Err(BrowserError::EngineUnavailable("embedder not linked".into()))
-    }
-    fn execute_script(&self, _session: &BrowserSession, _script: &str) -> Result<String, BrowserError> {
-        Err(BrowserError::EngineUnavailable("embedder not linked".into()))
-    }
-    fn last_crash_reason(&self) -> Option<String> {
-        None
-    }
-}
-
-fn run_host(script: Vec<Message>) -> (ScriptedTransport, Result<(), String>) {
-    let transport = ScriptedTransport::new(script);
-    let policy = CapabilityPolicy::new()
-        .with(Capability::TerminalCreate)
-        .with(Capability::BrowserNavigate);
-    let bus = MessageBus::new(transport.clone());
-    let mut server = IpcServer::new(
-        bus,
-        Box::new(LinuxProcessAdapter::new()),
-        Box::new(LinuxPtyAdapter::new()),
-        SessionService::new(),
-        policy,
-        Box::new(UnavailableEngine { name: "servo" }),
-        BlinkInstaller::new(&PathBuf::from("/nonexistent-oko-workspace")),
-    );
-    let result = server.run();
-    (transport, result)
-}
+use support::fake_engines::{run_host, CrashingEngine, UnavailableEngine};
 
 #[test]
 fn unavailable_browser_engine_does_not_stop_the_terminal_core() {
@@ -96,7 +24,7 @@ fn unavailable_browser_engine_does_not_stop_the_terminal_core() {
         Message::request("3", "host.shutdown", object(vec![])),
     ];
 
-    let (transport, run) = run_host(script);
+    let (transport, run) = run_host(script, Box::new(UnavailableEngine { name: "servo" }));
 
     assert!(run.is_ok(), "host exited with {:?} instead of serving", run);
     let status = transport.reply_for("host.status").expect("host.status must be answered");
@@ -114,7 +42,7 @@ fn unavailable_engine_is_reported_without_silent_fallback() {
         Message::request("2", "host.shutdown", object(vec![])),
     ];
 
-    let (transport, run) = run_host(script);
+    let (transport, run) = run_host(script, Box::new(UnavailableEngine { name: "servo" }));
 
     assert!(run.is_ok(), "host exited with {:?} instead of serving", run);
     let reply = transport.reply_for("host.browser.engine").expect("engine must be reported");
@@ -131,4 +59,42 @@ fn unavailable_engine_is_reported_without_silent_fallback() {
     );
     let reason = json::get(&reply, "reason").and_then(json::as_str).unwrap_or("");
     assert!(!reason.is_empty(), "an unavailable engine must say why (OBS-003)");
+}
+
+#[test]
+fn engine_crash_after_startup_keeps_the_terminal_core_serving() {
+    let script = vec![
+        Message::request(
+            "1",
+            "host.browser.open",
+            object(vec![("url".into(), json::str("https://example.com"))]),
+        ),
+        Message::request("2", "host.browser.engine", object(vec![])),
+        Message::request("3", "host.status", object(vec![])),
+        Message::request("4", "host.terminal.create", object(vec![])),
+        Message::request("5", "host.shutdown", object(vec![])),
+    ];
+
+    let (transport, run) = run_host(script, Box::new(CrashingEngine { name: "mock" }));
+
+    assert!(run.is_ok(), "host exited with {:?} instead of serving", run);
+    let error = transport
+        .error_for("host.browser.open")
+        .expect("a crashed engine must fail the request that hit it");
+    assert!(error.contains("Crash"), "error was {:?}", error);
+    assert!(
+        transport.reply_for("host.status").is_some(),
+        "the core must keep answering after an engine crash (ENG-004)"
+    );
+    assert!(
+        transport.reply_for("host.terminal.create").is_some(),
+        "the terminal must survive an engine crash (ENG-004)"
+    );
+    let engine = transport.reply_for("host.browser.engine").expect("engine reply");
+    assert_eq!(
+        json::get(&engine, "last_crash").and_then(json::as_str),
+        Some("renderer process terminated"),
+        "the crash reason must be reported (OBS-003), reply was {:?}",
+        engine
+    );
 }
