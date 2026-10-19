@@ -7,9 +7,25 @@
 //! the master side directly, so a session behaves like a session.
 //!
 //! Not here yet: the VT emulator. `read_output` returns what the shell wrote,
-//! including its echo and control sequences, rather than a rendered screen.
-//! `alacritty_terminal`'s cell grid goes behind this same port next — which is
-//! the point of the port, and why the trait does not change for it.
+//! including its echo and control sequences, rather than a rendered screen, so
+//! a caller sees a terminal rather than a screen.
+//!
+//! The next step is the cell grid, behind this same port — which is the point of
+//! the port, and why the trait does not change for it. The API was read out of
+//! `alacritty_terminal` 0.26's own source rather than guessed, so it does not
+//! need re-deriving:
+//!
+//! ```text
+//! let size = ScreenSize::new(COLS, ROWS);   // impl Dimensions: total_lines,
+//!                                           // screen_lines, columns
+//! let mut term = Term::new(Config::default(), &size, VoidListener);
+//! let mut parser = alacritty_terminal::vte::Parser::new();
+//! parser.advance(&mut term, bytes);         // the canonical feed
+//! for cell in term.renderable_content().display_iter { /* cell.point, cell.c */ }
+//! ```
+//!
+//! `read_output` then renders the grid instead of returning the raw buffer.
+//! Until it does, a shell's echo and prompt are part of every reply.
 
 mod session;
 
