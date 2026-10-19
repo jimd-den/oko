@@ -1,15 +1,6 @@
-// ỌKỌ computer — the console that talks back (SRD §7.3).
-//
-// Every request goes to the host as one typed, versioned message; the host
-// decides what the words mean (domain::computer) and answers. This file owns
-// no grammar: it shows the conversation and the readouts.
-//
-// Speech is offered only if the engine has it. Servo has no speech synthesis,
-// so the control is hidden rather than shown doing nothing.
-
+// ỌKỌ computer — multi-panel console.
 (function () {
   'use strict';
-
   const hostCall = window.Oko.hostCall;
   const el = (id) => document.getElementById(id);
 
@@ -28,6 +19,7 @@
   }
 
   async function ask(text) {
+    if (!text) return;
     say('you', text);
     try {
       const answer = await hostCall('computer.ask', { text: text, session_id: sessionId });
@@ -41,16 +33,89 @@
     }
   }
 
-  async function readouts() {
+  async function loadStatus() {
     try {
       const status = await hostCall('host.status');
+      el('s-core').textContent = status.core || 'ready';
+      el('s-ui').textContent = status.ui || '?';
       el('r-host').textContent = status.core + ' · ' + status.ui;
+      const sessions = await hostCall('host.terminal.read', {}).catch(() => null);
+      el('s-sessions').textContent = sessions ? 'active' : 'none';
+    } catch (e) { el('s-core').textContent = 'unreachable'; }
+  }
+
+  async function loadEngine() {
+    try {
       const engine = await hostCall('host.browser.engine');
+      el('e-name').textContent = engine.engine;
+      el('e-version').textContent = engine.version;
+      el('e-state').textContent = engine.state || '?';
+      el('e-exp').textContent = engine.experimental ? 'yes' : 'no';
       el('r-engine').textContent = engine.engine + ' ' + engine.version + ' · ' + (engine.state || '?');
-    } catch (error) {
-      el('r-host').textContent = 'unreachable';
-      el('r-engine').textContent = 'unreachable';
+    } catch (e) { el('e-name').textContent = 'unreachable'; }
+  }
+
+  async function loadCapabilities() {
+    try {
+      const caps = await hostCall('host.browser.capabilities');
+      el('cap-list').textContent = (caps.capabilities || []).join(', ') || 'none';
+    } catch (e) { el('cap-list').textContent = 'unreachable'; }
+  }
+
+  async function loadApps() {
+    const list = el('app-list');
+    list.innerHTML = '';
+    try {
+      const res = await hostCall('host.app.list');
+      (res.apps || []).forEach((a) => {
+        const li = document.createElement('li');
+        const span = document.createElement('span');
+        span.textContent = a.name || a.id || '?';
+        const btn = document.createElement('button');
+        btn.textContent = 'LAUNCH';
+        btn.addEventListener('click', () => hostCall('host.app.launch', { id: a.id }).then(() => say('it', 'launched ' + (a.name || a.id))).catch((e) => say('err', e.message)));
+        li.appendChild(span);
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+      if (!list.children.length) {
+        const li = document.createElement('li');
+        li.textContent = 'no applications';
+        list.appendChild(li);
+      }
+    } catch (e) {
+      const li = document.createElement('li');
+      li.textContent = 'unreachable';
+      list.appendChild(li);
     }
+  }
+
+  async function doCapture() {
+    try {
+      const res = await hostCall('render.capture', { path: '/tmp/oko-capture.ppm' });
+      el('r-capture').textContent = res.path || 'captured';
+      el('r-frames').textContent = (res.frame || 0).toString();
+    } catch (e) { el('r-capture').textContent = 'failed'; }
+  }
+
+  function wave() {
+    const c = el('wave');
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    const w = c.width, h = c.height;
+    let t = 0;
+    setInterval(() => {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#ff9c00';
+      ctx.beginPath();
+      for (let x = 0; x < w; x++) {
+        const y = h / 2 + Math.sin((x + t) * 0.05) * (h / 3) + Math.sin((x + t) * 0.13) * (h / 8);
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      t += 4;
+    }, 60);
   }
 
   function wire() {
@@ -63,20 +128,24 @@
       input.focus();
     });
 
+    el('btn-engine').addEventListener('click', loadEngine);
+    el('btn-apps').addEventListener('click', loadApps);
+    el('btn-capture').addEventListener('click', doCapture);
+    el('btn-status').addEventListener('click', () => ask('status'));
+
     if (window.speechSynthesis) {
       const button = el('speak');
       button.hidden = false;
       button.addEventListener('click', () => {
         speaking = !speaking;
-        button.textContent = speaking ? 'speaking on' : 'speak replies';
+        button.textContent = speaking ? 'SPEAKING ON' : 'SPEAK REPLIES';
       });
     }
 
-    setInterval(() => { el('clock').textContent = new Date().toLocaleTimeString(); }, 1000);
+    setInterval(() => { el('clock').textContent = new Date().toLocaleTimeString(); el('s-time').textContent = new Date().toLocaleTimeString(); }, 1000);
 
-    // A computer boots and reports. The first thing on the console is the host
-    // answering for itself, which also proves the token and the API work.
-    readouts();
+    loadStatus(); loadEngine(); loadCapabilities(); loadApps();
+    wave();
     ask('status');
   }
 

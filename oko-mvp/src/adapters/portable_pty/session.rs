@@ -7,15 +7,29 @@
 //! purpose and owns nothing but its buffer, so a session dropped without a close
 //! leaks one thread until the shell exits.
 
+use super::grid::Screen;
 use crate::ports::terminal::PtyError;
 use portable_pty::{Child, MasterPty, PtySize};
 use std::io::{Read, Write};
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
+
+/// How long the screen must be unchanged before a read believes the shell has
+/// finished drawing. A shell writes its echo first and the command's output
+/// after, so a read that stopped at the first byte would answer with the echo.
+const QUIET: Duration = Duration::from_millis(400);
+
+/// The longest a read waits for anything at all. A session that says nothing
+/// still answers; it does not hold its caller.
+const SETTLE_CAP: Duration = Duration::from_millis(1500);
+
+const POLL: Duration = Duration::from_millis(10);
 
 pub(super) struct SessionEntry {
     master: Box<dyn MasterPty + Send>,
     writer: Box<dyn Write + Send>,
     output: Arc<Mutex<Vec<u8>>>,
+    screen: Screen,
     child: Box<dyn Child + Send + Sync>,
     last_exit: Option<i32>,
 }
@@ -26,6 +40,8 @@ impl SessionEntry {
         writer: Box<dyn Write + Send>,
         mut reader: Box<dyn Read + Send>,
         child: Box<dyn Child + Send + Sync>,
+        cols: u16,
+        rows: u16,
     ) -> Self {
         let output = Arc::new(Mutex::new(Vec::new()));
         let sink = Arc::clone(&output);
@@ -44,9 +60,19 @@ impl SessionEntry {
             master,
             writer,
             output,
+            screen: Screen::new(cols, rows),
             child,
             last_exit: None,
         }
+    }
+
+    /// Everything the shell has written since the last read.
+    fn take_output(&self) -> Result<Vec<u8>, PtyError> {
+        let mut out = self
+            .output
+            .lock()
+            .map_err(|_| PtyError::ReadFailed("buffer lock poisoned".into()))?;
+        Ok(std::mem::take(&mut *out))
     }
 
     pub(super) fn write(&mut self, bytes: &[u8]) -> Result<(), PtyError> {
@@ -56,29 +82,39 @@ impl SessionEntry {
             .map_err(|e| PtyError::WriteFailed(e.to_string()))
     }
 
-    /// Everything the shell has written since the last read.
+    /// The screen the session is showing, once it has stopped changing.
     ///
-    /// Waits briefly for something to arrive, because a caller that has just
-    /// written to a shell and read once gets an empty screen: the shell has not
-    /// answered yet. The wait is bounded, so a silent session still returns.
-    pub(super) fn drain(&mut self) -> Result<String, PtyError> {
-        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(400);
+    /// Waits for quiet rather than for the first byte, because a shell draws the
+    /// echo of what it was given before it draws the answer. The wait is
+    /// bounded, so a session with nothing to say still returns.
+    pub(super) fn read_screen(&mut self) -> Result<String, PtyError> {
+        let deadline = Instant::now() + SETTLE_CAP;
+        let mut quiet_since = Instant::now();
         loop {
-            let bytes = {
-                let mut out = self
-                    .output
-                    .lock()
-                    .map_err(|_| PtyError::ReadFailed("buffer lock poisoned".into()))?;
-                std::mem::take(&mut *out)
-            };
-            if !bytes.is_empty() || std::time::Instant::now() >= deadline {
-                return Ok(String::from_utf8_lossy(&bytes).to_string());
+            let bytes = self.take_output()?;
+            if bytes.is_empty() {
+                if quiet_since.elapsed() >= QUIET {
+                    break;
+                }
+            } else {
+                self.screen.feed(&bytes);
+                quiet_since = Instant::now();
             }
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            if Instant::now() >= deadline {
+                break;
+            }
+            std::thread::sleep(POLL);
         }
+        Ok(self.screen.render())
     }
 
-    pub(super) fn resize(&self, cols: u16, rows: u16) -> Result<(), PtyError> {
+    /// The row the cursor is on: the line the shell will read into next.
+    pub(super) fn cursor_line(&self) -> usize {
+        self.screen.cursor_line()
+    }
+
+    pub(super) fn resize(&mut self, cols: u16, rows: u16) -> Result<(), PtyError> {
+        self.screen.resize(cols, rows);
         self.master
             .resize(PtySize {
                 rows,

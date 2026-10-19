@@ -74,14 +74,32 @@ pub(super) fn run_reply(
         .terminal
         .write_input(&pty, format!("{}\n", command).as_bytes())
         .map_err(|e| format!("{:?}", e))?;
+    let before_cursor = server.terminal.cursor_line(&pty).unwrap_or(0);
     let output = server
         .terminal
         .read_output(&pty)
         .map_err(|e| format!("{:?}", e))?;
-    let trimmed = output.trim_end();
-    if trimmed.is_empty() {
-        Ok("Command completed with no output.".into())
+    let after_cursor = server.terminal.cursor_line(&pty).unwrap_or(0);
+    let lines: Vec<&str> = output.lines().collect();
+    // Lines the command newly drew: from the cursor's old row to its new row.
+    let slice = if after_cursor >= before_cursor {
+        &lines[before_cursor..after_cursor.min(lines.len())]
     } else {
-        Ok(trimmed.to_string())
+        &lines[..]
+    };
+    // Drop the echoed command line and any prompt line; keep the rest.
+    let mut answer: Vec<&str> = slice
+        .iter()
+        .copied()
+        .filter(|l| !l.trim_start().starts_with("violindocgfx@") && !l.contains(command))
+        .collect();
+    // trim trailing empties
+    while answer.last().map(|s| s.trim().is_empty()).unwrap_or(false) {
+        answer.pop();
     }
+    let trimmed = answer.join("\n").trim().to_string();
+    if trimmed.is_empty() {
+        return Ok("Command completed with no output.".into());
+    }
+    Ok(trimmed)
 }

@@ -3,49 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- The host replaces this marker with a per-session token. This page ships
-     with ỌKỌ, so it is trusted local UI (zone B) and may call the host API
-     (SRD §10.2, SEC-014). -->
 <meta name="oko-token" content="__OKO_HOST_TOKEN__">
 <title>ỌKỌ computer</title>
 <link rel="stylesheet" href="computer.css">
 </head>
 <body>
   <div id="console" role="application" aria-label="ỌKỌ computer">
-    <nav id="rail" aria-hidden="true">
+    <nav id="rail" aria-label="Sections">
       <div class="cap"></div>
-      <div class="bar rose"></div>
-      <div class="bar short tan"></div>
-      <div class="bar tall"></div>
-      <div class="bar violet short"></div>
-      <div class="bar rose"></div>
-      <div class="bar short tan"></div>
+      <button class="bar rose" data-panel="status" aria-label="Status"></button>
+      <button class="bar short tan" data-panel="engine" aria-label="Engine"></button>
+      <button class="bar tall" data-panel="apps" aria-label="Applications"></button>
+      <button class="bar violet short" data-panel="render" aria-label="Render"></button>
+      <button class="bar rose" data-panel="console" aria-label="Console"></button>
+      <button class="bar short tan" data-panel="sensors" aria-label="Sensors"></button>
     </nav>
 
     <main id="centre">
       <header id="header">
-        <span class="title">ỌKỌ computer</span>
+        <span class="title">ỌKỌ COMPUTER</span>
         <span class="spacer"></span>
         <span class="clock" id="clock">--:--:--</span>
       </header>
 
-      <section id="transcript" aria-live="polite" aria-label="Conversation"></section>
+      <section id="grid">
+        <article class="panel" id="p-status" data-panel="status">
+          <h2>STATUS</h2>
+          <div class="row"><span class="k">core</span><span class="v" id="s-core">…</span></div>
+          <div class="row"><span class="k">ui</span><span class="v" id="s-ui">…</span></div>
+          <div class="row"><span class="k">sessions</span><span class="v" id="s-sessions">…</span></div>
+          <canvas id="wave" width="320" height="60" aria-label="activity waveform"></canvas>
+        </article>
 
-      <form id="prompt" autocomplete="off">
-        <label for="ask">Computer</label>
-        <input id="ask" type="text" autofocus spellcheck="false"
-               autocapitalize="off" autocorrect="off"
-               aria-label="Say something to the computer" />
-      </form>
+        <article class="panel" id="p-engine" data-panel="engine">
+          <h2>ENGINE</h2>
+          <div class="row"><span class="k">name</span><span class="v" id="e-name">…</span></div>
+          <div class="row"><span class="k">version</span><span class="v" id="e-version">…</span></div>
+          <div class="row"><span class="k">state</span><span class="v" id="e-state">…</span></div>
+          <div class="row"><span class="k">experimental</span><span class="v" id="e-exp">…</span></div>
+          <button type="button" class="act" id="btn-engine">REFRESH ENGINE</button>
+        </article>
+
+        <article class="panel" id="p-apps" data-panel="apps">
+          <h2>APPLICATIONS</h2>
+          <ul id="app-list" aria-live="polite"></ul>
+          <button type="button" class="act" id="btn-apps">REFRESH LIST</button>
+        </article>
+
+        <article class="panel" id="p-render" data-panel="render">
+          <h2>RENDER</h2>
+          <div class="row"><span class="k">frames</span><span class="v" id="r-frames">…</span></div>
+          <div class="row"><span class="k">last capture</span><span class="v" id="r-capture">…</span></div>
+          <button type="button" class="act" id="btn-capture">CAPTURE FRAME</button>
+        </article>
+
+        <article class="panel" id="p-console" data-panel="console">
+          <h2>CONSOLE</h2>
+          <div id="transcript" aria-live="polite"></div>
+          <form id="prompt" autocomplete="off">
+            <label for="ask">COMPUTER</label>
+            <input id="ask" type="text" autofocus spellcheck="false" autocapitalize="off" autocorrect="off" />
+          </form>
+        </article>
+
+        <article class="panel" id="p-sensors" data-panel="sensors">
+          <h2>SENSORS</h2>
+          <div class="row"><span class="k">capabilities</span><span class="v" id="cap-list">…</span></div>
+          <div class="row"><span class="k">time</span><span class="v" id="s-time">…</span></div>
+          <button type="button" class="act" id="btn-status">STATUS</button>
+        </article>
+      </section>
     </main>
 
     <aside id="readouts" aria-label="Readouts">
       <div class="readout"><span class="key">engine</span><span class="value" id="r-engine">…</span></div>
       <div class="readout"><span class="key">session</span><span class="value" id="r-session">…</span></div>
       <div class="readout"><span class="key">host</span><span class="value" id="r-host">…</span></div>
-      <div class="readout tall"><span class="key">hints</span><span class="value">
-        status · who are you · open &lt;url&gt;<br>anything else runs in the shell
-      </span></div>
       <button id="speak" type="button" hidden>speak replies</button>
     </aside>
   </div>

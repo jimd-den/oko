@@ -27,6 +27,7 @@
 //! `read_output` then renders the grid instead of returning the raw buffer.
 //! Until it does, a shell's echo and prompt are part of every reply.
 
+mod grid;
 mod session;
 
 #[cfg(test)]
@@ -123,7 +124,7 @@ impl TerminalPort for PortablePtyAdapter {
             .map_err(|_| PtyError::OpenFailed("adapter lock poisoned".into()))?
             .insert(
                 id.clone(),
-                SessionEntry::new(pair.master, writer, reader, child),
+                SessionEntry::new(pair.master, writer, reader, child, COLS, ROWS),
             );
         Ok(PtySession(id))
     }
@@ -133,7 +134,11 @@ impl TerminalPort for PortablePtyAdapter {
     }
 
     fn read_output(&self, session: &PtySession) -> Result<String, PtyError> {
-        self.with_session(session, |entry| entry.drain())
+        self.with_session(session, |entry| entry.read_screen())
+    }
+
+    fn cursor_line(&self, session: &PtySession) -> Result<usize, PtyError> {
+        self.with_session(session, |entry| Ok(entry.cursor_line()))
     }
 
     fn resize(&self, session: &PtySession, cols: u16, rows: u16) -> Result<(), PtyError> {

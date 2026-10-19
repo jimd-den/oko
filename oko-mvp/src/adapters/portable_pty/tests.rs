@@ -82,6 +82,33 @@ fn two_sessions_are_independent() {
 }
 
 #[test]
+fn the_screen_applies_control_sequences_instead_of_showing_them() {
+    let adapter = PortablePtyAdapter::new();
+    let session = adapter.create_session().expect("a PTY session");
+
+    // `oko-done` is produced by the shell, not typed into it, so the string can
+    // only reach the caller as output. The escape sequence moves the cursor, so
+    // a rendered screen has it applied and a raw buffer still carries it.
+    adapter
+        .write_input(&session, b"printf \"\\033[2;5Hoko-$(printf done)\\n\"\n")
+        .expect("write");
+    let mut screen = String::new();
+    assert!(
+        eventually(|| {
+            screen = adapter.read_output(&session).unwrap_or_default();
+            screen.contains("oko-done")
+        }),
+        "the screen never showed the command's output; last read {:?}",
+        screen
+    );
+    assert!(
+        !screen.contains('\u{1b}'),
+        "control sequences reached the caller instead of the grid: {:?}",
+        screen
+    );
+}
+
+#[test]
 fn an_unknown_session_is_an_error_not_a_panic() {
     let adapter = PortablePtyAdapter::new();
     let stranger = PtySession(SessionId("never-created".into()));

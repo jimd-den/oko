@@ -43,22 +43,23 @@ fn a_status_request_is_answered_with_the_state() {
 }
 
 #[test]
-fn a_command_is_run_and_its_output_returned() {
+fn a_command_is_answered_with_its_output_and_not_with_the_request() {
     let mut core = core();
-    // The session is a real shell now, so the reply carries what a terminal
-    // shows — the echoed command and the prompt included — until the VT
-    // emulator renders a screen. What matters is that the output comes back.
-    let reply = ask(&mut core, "echo hello");
-    assert!(reply.contains("hello"), "reply was {:?}", reply);
+    // The shell echoes what it is given and prints a prompt when it is ready
+    // again. Neither is an answer, so neither is in the reply.
+    assert_eq!(ask(&mut core, "echo hello"), "hello");
 }
 
 #[test]
-fn a_silent_command_still_returns_the_session_id() {
-    // "no output" cannot be told from the shell's own echo and prompt until the
-    // VT emulator renders a screen, so this asserts what is true today: the
-    // command ran and the caller can keep using the session.
+fn a_command_with_no_output_says_so() {
     let mut core = core();
-    let payload = json::object(vec![("text".into(), str("true"))]);
+    assert_eq!(ask(&mut core, "true"), "Command completed with no output.");
+}
+
+#[test]
+fn a_command_still_returns_the_session_id() {
+    let mut core = core();
+    let payload = json::object(vec![("text".into(), str("echo one"))]);
     let reply = handle_ask(&mut core, &payload).unwrap();
     assert_eq!(
         json::get(&reply, "session_id").and_then(json::as_str),

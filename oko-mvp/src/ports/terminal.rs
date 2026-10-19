@@ -22,13 +22,25 @@ pub trait TerminalPort: Send + Sync {
     fn create_session(&self) -> Result<PtySession, PtyError>;
     /// Write user input into the PTY.
     fn write_input(&self, session: &PtySession, bytes: &[u8]) -> Result<(), PtyError>;
-    /// Read terminal output.
+    /// The screen the session is showing.
     ///
-    /// Contract: returns what the session has produced since the last read. A
-    /// real shell answers when it answers, so an implementation may wait
-    /// briefly for output rather than returning an empty screen to a caller
-    /// that has just written to it. It must never wait without bound.
+    /// Contract: returns the rendered screen, not the bytes behind it —
+    /// cursor movement applied, erases applied, control sequences gone, lines
+    /// trailing-blank-trimmed. It is the same screen on every read until the
+    /// session draws something, so a caller that wants a log appends a diff,
+    /// not the string.
+    ///
+    /// A real shell draws the echo of what it was given before it draws the
+    /// answer, so an implementation waits for the screen to settle rather than
+    /// returning at the first byte. It must never wait without bound.
     fn read_output(&self, session: &PtySession) -> Result<String, PtyError>;
+
+    /// The row the session's cursor is on, counted from the top of the screen.
+    ///
+    /// Contract: a shell draws its prompt and then waits there, so this is the
+    /// line a command's output stops before — which is how a caller that asked
+    /// a question tells the answer from the question.
+    fn cursor_line(&self, session: &PtySession) -> Result<usize, PtyError>;
     fn resize(&self, _session: &PtySession, _cols: u16, _rows: u16) -> Result<(), PtyError> {
         Ok(())
     }
