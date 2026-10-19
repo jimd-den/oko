@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="oko-token" content="__OKO_HOST_TOKEN__">
+<title>ỌKỌ · live readout</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #ffcc99;
+               font-family: ui-monospace, Menlo, monospace; }
+  main { height: 100%; display: grid; place-content: center; gap: 14px; text-align: center; }
+  h1 { color: #ff9c00; letter-spacing: 0.2em; font-size: 14px; text-transform: uppercase; }
+  .row { display: flex; justify-content: space-between; gap: 24px; font-size: 14px; }
+  .k { color: #ff9c00; text-transform: uppercase; font-size: 11px; letter-spacing: 0.14em; }
+  canvas { border: 1px solid #3a2a1a; }
+</style>
+</head>
+<body>
+  <main>
+    <h1>Live host readout</h1>
+    <div class="row"><span class="k">core</span><span id="core">…</span></div>
+    <div class="row"><span class="k">engine</span><span id="engine">…</span></div>
+    <div class="row"><span class="k">clock</span><span id="clock">…</span></div>
+    <canvas id="wave" width="360" height="64"></canvas>
+  </main>
+  <script src="../scripts/host-api.js"></script>
+  <script>
+    const hostCall = window.Oko.hostCall;
+    const el = (id) => document.getElementById(id);
+    async function refresh() {
+      try {
+        const status = await hostCall('host.status');
+        el('core').textContent = status.core + ' · ' + status.ui;
+        const engine = await hostCall('host.browser.engine');
+        el('engine').textContent = engine.engine + ' ' + engine.version;
+      } catch (e) {
+        el('core').textContent = 'unreachable';
+      }
+      el('clock').textContent = new Date().toLocaleTimeString();
+    }
+    const ctx = el('wave').getContext('2d');
+    let t = 0;
+    function draw() {
+      const c = el('wave'), w = c.width, h = c.height;
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#ff9c00'; ctx.beginPath();
+      for (let x = 0; x < w; x++) {
+        const y = h / 2 + Math.sin((x + t) * 0.06) * (h / 3);
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke(); t += 3;
+    }
+    setInterval(refresh, 1000); setInterval(draw, 60);
+    refresh();
+  </script>
+</body>
+</html>

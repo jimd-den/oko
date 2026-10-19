@@ -33,6 +33,8 @@ pub struct Core {
     engine_unavailable: Option<String>,
     /// The root the filesystem panel may read and write inside.
     workspace_root: std::path::PathBuf,
+    /// The directory the HTTP transport serves; apps live in `ui_root/apps`.
+    ui_root: std::path::PathBuf,
 }
 
 impl Core {
@@ -54,7 +56,14 @@ impl Core {
             desktop_mode: false,
             engine_unavailable: None,
             workspace_root: std::env::current_dir().unwrap_or_else(|_| ".".into()),
+            ui_root: std::path::PathBuf::from("ui"),
         }
+    }
+
+    /// The directory the desktop shell is served from.
+    pub fn with_ui_root(mut self, root: std::path::PathBuf) -> Self {
+        self.ui_root = root;
+        self
     }
 
     /// Confine the filesystem panel to `root`.

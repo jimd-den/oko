@@ -74,7 +74,9 @@
         span.textContent = a.name || a.id || '?';
         const btn = document.createElement('button');
         btn.textContent = 'LAUNCH';
-        btn.addEventListener('click', () => hostCall('host.app.launch', { id: a.id }).then(() => say('it', 'launched ' + (a.name || a.id))).catch((e) => say('err', e.message)));
+        btn.addEventListener('click', () => hostCall('host.app.launch', { id: a.id })
+          .then((res) => { if (res.url) openApp(a.name || a.id, res.url); else say('it', 'launched ' + (a.name || a.id)); })
+          .catch((e) => say('err', e.message)));
         li.appendChild(span);
         li.appendChild(btn);
         list.appendChild(li);
@@ -120,6 +122,17 @@
   }
 
 
+  function openApp(name, url) {
+    el('app-title').textContent = name;
+    el('app-frame').src = url;
+    el('app-overlay').hidden = false;
+  }
+
+  function closeApp() {
+    el('app-frame').src = 'about:blank';
+    el('app-overlay').hidden = true;
+  }
+
   function wire() {
     el('prompt').addEventListener('submit', (event) => {
       event.preventDefault();
@@ -134,6 +147,7 @@
     el('btn-apps').addEventListener('click', loadApps);
     el('btn-capture').addEventListener('click', doCapture);
     el('btn-status').addEventListener('click', () => ask('status'));
+    el('app-close').addEventListener('click', closeApp);
     el('btn-files').addEventListener('click', () => window.OkoFiles.load());
     el('btn-save').addEventListener('click', () => window.OkoFiles.save());
 

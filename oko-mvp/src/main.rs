@@ -74,6 +74,7 @@ fn main() {
 
 /// Serve the desktop shell on loopback for a browser engine to render.
 fn serve_ui(core: Core, options: &Options, workspace_root: &Path) -> Result<(), String> {
+    let core = core.with_ui_root(options.ui_root.clone());
     let server = HttpUiServer::bind_on(core, &options.ui_root, &options.bind, options.port)?;
     let url = server.url();
     let page_url = format!("{}{}", url, options.page.trim_start_matches('/'));
@@ -105,6 +106,7 @@ fn policy() -> CapabilityPolicy {
         .with(Capability::BrowserNavigate)
         .with(Capability::GraphicsCreate)
         .with(Capability::FilesystemRead)
+        .with(Capability::FilesystemWrite)
         .with(Capability::SystemConfigure)
         .with(Capability::TerminalCreate)
 }
