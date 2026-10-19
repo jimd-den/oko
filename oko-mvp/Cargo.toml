@@ -29,7 +29,16 @@ edition = "2021"
 name = "oko-host"
 path = "src/main.rs"
 
+# Slice 4: a real terminal core (SRD §7.1, TERM-004). Hand-rolling a VT parser
+# is the swamp the ecosystem already drained, so the two maintained crates come
+# in behind the port traits the architecture already defines. This is the first
+# exception to the zero-dependency rule, and it is recorded in
+# toolchain/versions.lock and docs/adr/0001.
 [dependencies]
+# Alacritty's UI-independent terminal core: VTE parser, cell grid, scrollback.
+alacritty_terminal = "0.26"
+# wezterm's PTY crate: the real adapter behind TerminalPort.
+portable-pty = "0.8"
 
 [features]
 default = []

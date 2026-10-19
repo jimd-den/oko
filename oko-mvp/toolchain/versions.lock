@@ -94,3 +94,23 @@ local_patches = []
 patch_rationale = "none"
 update_owner = "platform-team"
 rollback_procedure = "Remove third_party/engines/servo and revert versions.lock to the previous revision"
+
+# Terminal core (ADR 0001, issue #5). First exception to the zero-dependency
+# rule: recorded here with exact versions per DEP-001, and the reason per ADR.
+[alacritty_terminal]
+component = "alacritty_terminal"
+upstream_project = "Alacritty"
+role = "UI-independent terminal core: VTE parser, cell grid, scrollback"
+version = "0.26.0"
+license = "Apache-2.0"
+pinned_by = "Cargo.lock"
+why = "Hand-rolling a VT parser is the swamp the ecosystem already drained (ADR 0001)"
+
+[portable_pty]
+component = "portable-pty"
+upstream_project = "wezterm"
+role = "Real PTY sessions behind TerminalPort"
+version = "0.8.0"
+license = "MIT"
+pinned_by = "Cargo.lock"
+why = "The planned adapter swap behind the existing port trait (ADR 0001)"
