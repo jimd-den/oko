@@ -16,6 +16,7 @@ pub fn required_for(route: &str) -> Vec<Capability> {
         | "host.terminal.write"
         | "host.terminal.close" => vec![Capability::TerminalCreate],
         "host.app.launch" | "host.app.stop" => vec![Capability::ProcessSpawn],
+        "host.app.create" => vec![Capability::FilesystemWrite],
         "host.fs.read" => vec![Capability::FilesystemRead],
         "host.fs.write" => vec![Capability::FilesystemWrite],
         "host.fs.list" => vec![Capability::FilesystemRead],

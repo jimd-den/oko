@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="oko-token" content="__OKO_HOST_TOKEN__">
+<title>ỌKỌ · app</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #ddd;
+               font-family: ui-monospace, Menlo, monospace; }
+  main { height: 100%; display: grid; place-content: center; gap: 10px; }
+</style>
+</head>
+<body>
+  <main>
+    <h1>a new ỌKỌ app</h1>
+    <p id="status">connecting…</p>
+  </main>
+  <script src="../scripts/host-api.js"></script>
+  <script>
+    const el = (id) => document.getElementById(id);
+    async function boot() {
+      const status = await window.Oko.hostCall('host.status');
+      el('status').textContent = status.core + ' · ' + status.ui;
+    }
+    boot().catch((e) => { el('status').textContent = 'host: ' + e.message; });
+  </script>
+</body>
+</html>

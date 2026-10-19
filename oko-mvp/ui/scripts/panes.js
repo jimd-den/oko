@@ -13,6 +13,7 @@
   const el = (id) => document.getElementById(id);
 
   let sessionId = null;
+  let currentUrl = null;
 
   function write(text) {
     const out = el('terminal-output');
@@ -24,7 +25,7 @@
     const created = await hostCall('host.terminal.create');
     sessionId = created.session_id;
     write('ỌKỌ terminal · session ' + sessionId + '\n');
-    write('try: ls · echo hello · engine · browser open /apps/hello.html\n\n');
+    write('try: help · app new my-console avp · apps · app open hello\n\n');
   }
 
   async function runInShell(text) {
@@ -38,6 +39,40 @@
   // terminal instead of from a second, separate interface.
   async function runLine(text) {
     const trimmed = text.trim();
+    // `app` is the terminal's handle on the UI: create a page, open it, list
+    // what exists. No other surface is required to make a computer here.
+    if (trimmed === 'apps' || trimmed === 'app list') {
+      const reply = await hostCall('host.app.list');
+      const names = (reply.apps || []).map((a) => a.id);
+      write('apps: ' + (names.join('  ') || 'none') + '\n');
+      return;
+    }
+    if (trimmed.startsWith('app new ')) {
+      const parts = trimmed.slice('app new '.length).trim().split(/\s+/);
+      const name = parts[0];
+      const template = parts[1] || 'star-trek';
+      const made = await hostCall('host.app.create', { name: name, template: template });
+      write('created ' + made.url + ' from ' + template + '\n');
+      write('edit ui/apps/' + name + '.html, then: app open ' + name + '\n');
+      return;
+    }
+    if (trimmed.startsWith('app open ')) {
+      const name = trimmed.slice('app open '.length).trim();
+      const url = name.startsWith('/') ? name : '/apps/' + name + '.html';
+      await hostCall('ui.pane.open', { url: url });
+      openWebPane(url);
+      return;
+    }
+    if (trimmed === 'reload') {
+      if (currentUrl) openWebPane(currentUrl);
+      write('reloaded ' + (currentUrl || 'no pane') + '\n');
+      return;
+    }
+    if (trimmed === 'help') {
+      write('browser open <url> · app new <name> [star-trek|avp|blank] · app open <name>\n');
+      write('apps · reload · engine · anything else runs in the shell\n');
+      return;
+    }
     if (trimmed.startsWith('browser open ')) {
       const url = trimmed.slice('browser open '.length).trim();
       // The pane is rendered by whichever engine is showing the shell, so
@@ -49,11 +84,6 @@
     if (trimmed === 'engine') {
       await refreshEngine();
       write('engine status refreshed\n');
-      return;
-    }
-    if (trimmed === 'apps') {
-      const apps = await hostCall('host.app.list');
-      write('apps: ' + JSON.stringify(apps.sessions) + '\n');
       return;
     }
     await runInShell(trimmed);
@@ -77,6 +107,7 @@
     frame.src = url;
     view.appendChild(frame);
     el('browser-title').textContent = local ? url : url.replace(/^https?:\/\//, '');
+    currentUrl = url;
   }
 
   function showEngineStatus() {

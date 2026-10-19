@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="oko-token" content="__OKO_HOST_TOKEN__">
+<title>ỌKỌ · bridge console</title>
+<style>
+  :root { --amber:#ff9c00; --rose:#cc6666; --tan:#ffcc99; --violet:#9977cc; --dim:#3a2a1a; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: #000; color: var(--tan);
+               font-family: "Helvetica Neue", Arial, sans-serif; overflow: hidden; }
+  body { display: grid; grid-template-columns: 90px 1fr; }
+  #rail { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 8px 8px; }
+  #rail i { height: 26px; border-radius: 0 13px 13px 0; background: var(--amber); }
+  #rail i:nth-child(3n) { background: var(--rose); }
+  #rail i:nth-child(3n+2) { background: var(--violet); }
+  #rail i:last-child { flex: 1; opacity: .5; }
+  main { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 36px 1fr 1fr;
+         gap: 8px; padding: 8px; min-height: 0; }
+  header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px;
+           background: var(--amber); color: #000; padding: 0 14px;
+           border-radius: 18px 0 0 18px; font-weight: 700; letter-spacing: .2em;
+           text-transform: uppercase; }
+  header span:first-child { flex: 1; }
+  .panel { background: #140e06; border: 1px solid var(--dim); border-radius: 6px;
+           padding: 8px; display: flex; flex-direction: column; gap: 5px; min-height: 0; }
+  h2 { font-size: 11px; letter-spacing: .2em; color: var(--amber); text-transform: uppercase;
+       border-bottom: 1px solid var(--dim); padding-bottom: 3px; }
+  .row { display: flex; justify-content: space-between; font-size: 12px; }
+  .k { color: var(--amber); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+  canvas { width: 100%; flex: 1; background: #000; border: 1px solid var(--dim); min-height: 40px; }
+  #log { flex: 1; overflow: auto; font-size: 12px; line-height: 1.4; }
+  #log .you { color: #99ccff; } #log .it { color: var(--tan); } #log .err { color: var(--rose); }
+  form { display: flex; gap: 6px; }
+  input { flex: 1; background: #000; color: var(--amber); border: 1px solid var(--dim);
+          font-family: inherit; padding: 4px 8px; }
+  input:focus { outline: 2px solid var(--tan); }
+</style>
+</head>
+<body>
+  <nav id="rail" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></nav>
+  <main>
+    <header><span>USS ỌKỌ · BRIDGE</span><span id="clock">--:--:--</span></header>
+    <section class="panel"><h2>Systems</h2>
+      <div class="row"><span class="k">core</span><span id="core">…</span></div>
+      <div class="row"><span class="k">engine</span><span id="engine">…</span></div>
+      <div class="row"><span class="k">session</span><span id="session">…</span></div>
+      <canvas id="wave" width="300" height="60"></canvas>
+    </section>
+    <section class="panel"><h2>Navigation</h2>
+      <canvas id="stars" width="300" height="160"></canvas>
+      <div class="row"><span class="k">heading</span><span id="heading">000</span></div>
+    </section>
+    <section class="panel" style="grid-column: 1 / -1"><h2>Computer</h2>
+      <div id="log" aria-live="polite"></div>
+      <form id="ask"><input id="text" autocomplete="off" aria-label="Ask the computer" /></form>
+    </section>
+  </main>
+  <script src="../scripts/host-api.js"></script>
+  <script>
+    const call = window.Oko.hostCall, el = (id) => document.getElementById(id);
+    function say(kind, text) {
+      const line = document.createElement('div');
+      line.className = kind; line.textContent = text;
+      el('log').appendChild(line); el('log').scrollTop = el('log').scrollHeight;
+    }
+    async function status() {
+      try {
+        const s = await call('host.status'); el('core').textContent = s.core + ' · ' + s.ui;
+        const e = await call('host.browser.engine');
+        el('engine').textContent = e.engine + ' ' + e.version + ' · ' + (e.state || '?');
+      } catch (err) { el('core').textContent = 'unreachable'; }
+    }
+    el('ask').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const text = el('text').value.trim(); el('text').value = '';
+      if (!text) return;
+      say('you', text);
+      try {
+        const a = await call('computer.ask', { text });
+        say('it', a.reply);
+        if (a.session_id) el('session').textContent = a.session_id;
+      } catch (err) { say('err', err.message); }
+    });
+    const w = el('wave').getContext('2d'); let t = 0;
+    function drawWave() {
+      const c = el('wave'), ctx = w;
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.strokeStyle = '#ff9c00'; ctx.beginPath();
+      for (let x = 0; x < c.width; x++) {
+        const y = c.height / 2 + Math.sin((x + t) * .08) * (c.height / 3);
+        x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.stroke(); t += 4;
+    }
+    const sctx = el('stars').getContext('2d'); let heading = 0;
+    function drawStars() {
+      const c = el('stars');
+      sctx.fillStyle = '#000'; sctx.fillRect(0, 0, c.width, c.height);
+      sctx.fillStyle = '#ffcc99';
+      for (let i = 0; i < 40; i++) {
+        const a = (i * 97 + heading) % 360 * Math.PI / 180;
+        const r = 10 + (i * 13) % 70;
+        sctx.fillRect(c.width / 2 + Math.cos(a) * r, c.height / 2 + Math.sin(a) * r, 2, 2);
+      }
+      heading = (heading + 1) % 360; el('heading').textContent = String(heading).padStart(3, '0');
+    }
+    setInterval(() => { el('clock').textContent = new Date().toLocaleTimeString(); }, 1000);
+    setInterval(drawWave, 70); setInterval(drawStars, 90);
+    setInterval(status, 2000); status(); drawStars();
+  </script>
+</body>
+</html>
