@@ -45,7 +45,7 @@ fn main() {
         Box::new(LinuxPtyAdapter::new()) as Box<dyn TerminalPort>,
         SessionService::new(),
         policy(),
-        select::engine_for(&options.engine),
+        select::engine_for(&options.engine, &workspace_root),
         BlinkInstaller::new(&workspace_root),
     );
 

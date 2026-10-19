@@ -148,3 +148,22 @@ fn desktop_policy() -> CapabilityPolicy {
         .with(Capability::TerminalCreate)
         .with(Capability::BrowserNavigate)
 }
+
+/// A stand-in engine binary: it answers `--version` and then waits to be
+/// stopped, so the process-embedder path can be exercised without the real
+/// engine and without the network.
+pub fn fake_engine_binary() -> std::path::PathBuf {
+    use std::os::unix::fs::PermissionsExt;
+    let path = std::env::temp_dir().join(format!("oko-fake-engine-{}", std::process::id()));
+    std::fs::write(
+        &path,
+        "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'Version: Servo fake-test'; exit 0; fi\nsleep 30\n",
+    )
+    .expect("write fake engine");
+    let mut perms = std::fs::metadata(&path)
+        .expect("stat fake engine")
+        .permissions();
+    perms.set_mode(0o755);
+    std::fs::set_permissions(&path, perms).expect("chmod fake engine");
+    path
+}

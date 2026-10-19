@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- The host replaces this marker with a per-session token. This page ships
+     with ỌKỌ, so it is trusted local UI (zone B) and may call the host API
+     (SRD §10.2, SEC-014). -->
+<meta name="oko-token" content="__OKO_HOST_TOKEN__">
+<title>ỌKỌ computer</title>
+<link rel="stylesheet" href="computer.css">
+</head>
+<body>
+  <div id="console" role="application" aria-label="ỌKỌ computer">
+    <nav id="rail" aria-hidden="true">
+      <div class="cap"></div>
+      <div class="bar rose"></div>
+      <div class="bar short tan"></div>
+      <div class="bar tall"></div>
+      <div class="bar violet short"></div>
+      <div class="bar rose"></div>
+      <div class="bar short tan"></div>
+    </nav>
+
+    <main id="centre">
+      <header id="header">
+        <span class="title">ỌKỌ computer</span>
+        <span class="spacer"></span>
+        <span class="clock" id="clock">--:--:--</span>
+      </header>
+
+      <section id="transcript" aria-live="polite" aria-label="Conversation"></section>
+
+      <form id="prompt" autocomplete="off">
+        <label for="ask">Computer</label>
+        <input id="ask" type="text" autofocus spellcheck="false"
+               autocapitalize="off" autocorrect="off"
+               aria-label="Say something to the computer" />
+      </form>
+    </main>
+
+    <aside id="readouts" aria-label="Readouts">
+      <div class="readout"><span class="key">engine</span><span class="value" id="r-engine">…</span></div>
+      <div class="readout"><span class="key">session</span><span class="value" id="r-session">…</span></div>
+      <div class="readout"><span class="key">host</span><span class="value" id="r-host">…</span></div>
+      <div class="readout tall"><span class="key">hints</span><span class="value">
+        status · who are you · open &lt;url&gt;<br>anything else runs in the shell
+      </span></div>
+      <button id="speak" type="button" hidden>speak replies</button>
+    </aside>
+  </div>
+
+  <script src="../scripts/host-api.js"></script>
+  <script src="computer.js"></script>
+</body>
+</html>

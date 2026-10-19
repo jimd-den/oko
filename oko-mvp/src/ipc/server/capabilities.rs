@@ -20,6 +20,9 @@ pub fn required_for(route: &str) -> Vec<Capability> {
         // The computer answers with the state of the machine and can run a
         // command, so it needs what a terminal needs.
         "computer.ask" => vec![Capability::TerminalCreate],
+        // Opening a web pane is a navigation, so it needs the navigation
+        // capability even though the host's own engine is not involved.
+        "ui.pane.open" => vec![Capability::BrowserNavigate],
         "blink.install" | "blink.fetch-checksum" | "ui.mode.desktop" => {
             vec![Capability::SystemConfigure]
         }

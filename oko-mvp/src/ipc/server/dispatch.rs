@@ -52,6 +52,7 @@ fn dispatch_request(core: &mut Core, msg: &Message) -> Result<crate::ipc::json::
         "blink.status" => blink::handle_status(core),
         "blink.fetch-checksum" => blink::handle_fetch_checksum(core, &msg.payload),
         "ui.mode.desktop" => ui::handle_desktop(core),
+        "ui.pane.open" => ui::handle_pane_open(core, &msg.payload),
         "render.demo" => render::handle_demo(core, &msg.payload),
         "render.stats" => render::handle_stats(core),
         "render.capture" => render::handle_capture(core, &msg.payload),

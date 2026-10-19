@@ -40,7 +40,9 @@
     const trimmed = text.trim();
     if (trimmed.startsWith('browser open ')) {
       const url = trimmed.slice('browser open '.length).trim();
-      await hostCall('host.browser.open', { url: url });
+      // The pane is rendered by whichever engine is showing the shell, so
+      // this asks for the pane, not for a session on the host's own engine.
+      await hostCall('ui.pane.open', { url: url });
       openWebPane(url);
       return;
     }

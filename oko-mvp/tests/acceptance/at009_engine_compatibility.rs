@@ -130,10 +130,9 @@ fn blink_engine_passes_the_shared_conformance_suite() {
 #[test]
 fn servo_engine_passes_the_shared_conformance_suite() {
     use oko_core::browser::adapters::servo::ServoBrowserEngineAdapter;
-    // Nothing in this crate dereferences the embedder handle: it is a token
-    // passed back to the engine's own API. A non-null address is enough to
-    // exercise the linked path, and the real handle arrives from the pinned
-    // Servo build (SRD §14).
-    let engine = ServoBrowserEngineAdapter::with_embedder(1 as *mut std::ffi::c_void);
+    // A stand-in engine binary: it answers `--version` and then waits, which is
+    // what the adapter needs to exercise a real process session offline.
+    let engine =
+        ServoBrowserEngineAdapter::with_binary(&support::fake_engines::fake_engine_binary());
     assert_engine_conformance(&engine, &SERVO);
 }

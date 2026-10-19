@@ -1,5 +1,22 @@
 use super::*;
 use crate::browser::ports::engine::BrowserEnginePort;
+use std::fs;
+
+/// A stand-in engine: it answers `--version` and otherwise waits to be stopped,
+/// which is all this adapter needs from a real binary to exercise its paths.
+fn fake_engine() -> std::path::PathBuf {
+    let path = std::env::temp_dir().join(format!("oko-fake-servo-{}", std::process::id()));
+    fs::write(
+        &path,
+        "#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'Version: Servo fake-test'; exit 0; fi\nsleep 30\n",
+    )
+    .unwrap();
+    let mut perms = fs::metadata(&path).unwrap().permissions();
+    use std::os::unix::fs::PermissionsExt;
+    perms.set_mode(0o755);
+    fs::set_permissions(&path, perms).unwrap();
+    path
+}
 
 #[test]
 fn servo_identity_unlinked() {
