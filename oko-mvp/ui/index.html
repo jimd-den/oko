@@ -7,20 +7,30 @@
      must carry it, so a page that is not served by this host cannot drive it
      (SRD SEC-014, UI-009). -->
 <meta name="oko-token" content="__OKO_HOST_TOKEN__">
-<title>ỌKỌ — Terminal-First Desktop</title>
-<link rel="stylesheet" href="styles/themes/dark.css">
+<title>ỌKỌ — LCARS Console</title>
+<link rel="stylesheet" href="styles/themes/lcars.css">
 <link rel="stylesheet" href="styles/main.css">
 <link rel="stylesheet" href="styles/panes.css">
 </head>
 <body>
   <div id="desktop" role="desktop" aria-label="ỌKỌ workspace">
+    <!-- LCARS frame: the top bar is a console elbow. All original element IDs
+         are preserved, so host-api.js and panes.js run unchanged (SRD UI-008). -->
     <header id="top-bar" role="menubar" aria-label="System menu">
+      <div class="lcars-elbow lcars-elbow-left" aria-hidden="true"></div>
       <div class="brand" id="brand">ỌKỌ</div>
       <div class="status" id="status" aria-live="polite">core: connecting…</div>
+      <div class="command-wrap">
+        <input id="command-bar" type="text" autocapitalize="off" autocorrect="off"
+               spellcheck="false" aria-label="Command bar" placeholder="ENTER COMMAND" />
+      </div>
       <div class="spacer"></div>
+      <div id="stardate" aria-label="Stardate">SD ----.-</div>
       <div id="clock" aria-label="Current time">--:--:--</div>
-      <button id="btn-launcher" aria-label="Open application launcher">Apps</button>
-      <button id="btn-settings" aria-label="Open settings">Settings</button>
+      <button id="btn-alert" aria-label="Toggle red alert">ALERT</button>
+      <button id="btn-launcher" aria-label="Open application launcher">APPS</button>
+      <button id="btn-settings" aria-label="Open settings">CONFIG</button>
+      <div class="lcars-elbow lcars-elbow-right" aria-hidden="true"></div>
     </header>
 
     <!-- One workspace, two kinds of pane. A pane hosts a terminal or a web
@@ -29,7 +39,7 @@
     <div id="workspace" role="region" aria-label="Workspace">
       <section id="panel-terminal" class="panel" aria-label="Terminal">
         <div class="panel-header">
-          <span class="panel-title">Terminal</span>
+          <span class="panel-title">TERMINAL · SUBSTRATE</span>
           <div class="panel-controls">
             <button class="btn-split" id="btn-split-terminal" aria-label="Split terminal">⟍</button>
           </div>
@@ -44,7 +54,7 @@
 
       <section id="panel-browser" class="panel" aria-label="Browser">
         <div class="panel-header">
-          <span class="panel-title" id="browser-title">Web</span>
+          <span class="panel-title" id="browser-title">VIEWSCREEN</span>
           <div class="panel-controls">
             <button class="btn-refresh" id="btn-home" aria-label="Show engine status">⌂</button>
             <button class="btn-close" id="btn-open" aria-label="Open a URL">↗</button>
@@ -53,9 +63,9 @@
         <div class="panel-body">
           <div id="browser-view" class="browser-view" aria-label="Browser content">
             <div class="browser-placeholder">
-              <p>engine: <span id="browser-engine">loading…</span></p>
+              <p>ENGINE: <span id="browser-engine">loading…</span></p>
               <p id="browser-status">connecting to host…</p>
-              <p class="hint">type <code>browser open &lt;url&gt;</code> in the terminal</p>
+              <p class="hint">type <code>browser open &lt;url&gt;</code> in the command bar</p>
             </div>
           </div>
         </div>
@@ -65,6 +75,8 @@
     <footer id="status-bar" role="status" aria-live="polite">
       <span id="cap-status">caps: none</span>
       <span id="engine-status">engine: unknown</span>
+      <span class="spacer"></span>
+      <span id="lcars-auth">STARFLEET COMMAND · OKO CORE v0.3.0</span>
     </footer>
   </div>
 

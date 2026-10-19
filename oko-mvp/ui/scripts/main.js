@@ -59,7 +59,54 @@
     });
   }
 
-  // A launcher can ask for a pane to be open at startup:
+  // The command bar: the terminal made invisible. Every line runs through the
+  // same panes.runLine command model as the terminal (SRD §7.3) — the user
+  // never sees a terminal, but every keystroke is a command on the core.
+  function wireCommandBar() {
+    const bar = el('command-bar');
+    bar.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      const text = bar.value;
+      bar.value = '';
+      if (!text.trim()) return;
+      panes.write('⌁ ' + text + '\n');
+      panes.runLine(text).catch((error) => panes.write('error: ' + error.message + '\n'));
+    });
+  }
+
+  // Stardate: 1000 units per Earth year, epoch 2000-01-01. Positive for any
+  // date the console will ever see; a linear extrapolation from the TNG
+  // 2364 = 41000 convention would go negative before 2323.
+  function stardate(now) {
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const dayOfYear = (now - startOfYear) / 86400000;
+    const fractionalYear = now.getFullYear() + dayOfYear / 365.25;
+    return ((fractionalYear - 2000) * 1000).toFixed(1);
+  }
+
+  function wireClock() {
+    const tick = () => {
+      const now = new Date();
+      el('clock').textContent = now.toLocaleTimeString();
+      el('stardate').textContent = 'SD ' + stardate(now);
+    };
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  // Red alert is console chrome only: the core has no alert route, so the
+  // trace says so instead of pretending the core changed state.
+  function wireAlert() {
+    let armed = false;
+    el('btn-alert').addEventListener('click', () => {
+      armed = !armed;
+      document.body.classList.toggle('red-alert', armed);
+      el('btn-alert').textContent = armed ? 'STAND DOWN' : 'ALERT';
+      panes.write(armed
+        ? '// RED ALERT — console chrome only; the core has no alert route\n'
+        : '// alert cancelled — all decks report normal\n');
+    });
+  }
   // `?open=/apps/hello.html` or `?open=https://example.com`.
   function openRequestedPane() {
     const requested = new URLSearchParams(window.location.search).get('open');
@@ -68,9 +115,11 @@
 
   function wire() {
     wireTerminalInput();
+    wireCommandBar();
+    wireClock();
+    wireAlert();
     wireSplitter();
     wireButtons();
-    setInterval(() => { el('clock').textContent = new Date().toLocaleTimeString(); }, 1000);
     openRequestedPane();
     panes.openTerminal()
       .then(panes.refreshStatus)

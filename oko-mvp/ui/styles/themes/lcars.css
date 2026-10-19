@@ -1,0 +1,54 @@
+/* ỌKỌ theme: LCARS (Starfleet console) (SRD CFG-004 — themes are user preferences, never capabilities) */
+/* This file is loaded as a theme; it must not grant system authority (CFG-008). */
+/* The LCARS palette and shapes are chrome only: host-api.js and panes.js run
+   untouched, so the typed host.* contract is identical under the skin. */
+
+:root {
+  /* LCARS canonical-ish palette */
+  --lcars-orange: #ff9900;
+  --lcars-gold: #ffcc66;
+  --lcars-peach: #ff9966;
+  --lcars-tan: #ffcc99;
+  --lcars-peri: #9999ff;
+  --lcars-lav: #cc99cc;
+  --lcars-blue: #9999cc;
+  --lcars-teal: #99ccff;
+  --lcars-red: #cc0000;
+  --lcars-red-bright: #ff3333;
+
+  --bg: #000000;
+  --fg: var(--lcars-tan);
+  --muted: #8a7a6a;
+  --accent: var(--lcars-orange);
+  --border: #1a1a1a;
+  --panel-bg: #0a0a0a;
+  --focus: var(--lcars-peri);
+  --danger: var(--lcars-red-bright);
+
+  --lcars-font: "Arial Narrow", "Helvetica Neue Condensed", Impact, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+#top-bar {
+  background: var(--bg);
+  border-bottom-color: var(--border);
+}
+
+.panel-header {
+  background: var(--lcars-orange);
+  border-bottom-color: var(--border);
+}
+
+#terminal-input {
+  background: #050505;
+  border-top-color: var(--lcars-orange);
+}
+
+#status-bar {
+  background: var(--bg);
+  border-top-color: var(--border);
+}
