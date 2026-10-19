@@ -34,8 +34,25 @@ impl HttpUiServer {
     /// Bind on loopback. Port 0 asks the OS for a free port, which is what a
     /// test wants and what the host prints for the engine to open.
     pub fn bind(core: Core, ui_root: &Path, port: u16) -> Result<Self, String> {
-        let listener = TcpListener::bind(("127.0.0.1", port))
-            .map_err(|e| format!("bind 127.0.0.1:{}: {}", port, e))?;
+        Self::bind_on(core, ui_root, "127.0.0.1", port)
+    }
+
+    /// Bind on a chosen address.
+    ///
+    /// Hazard: anything other than loopback publishes the shell and its token
+    /// to the network. The token still gates the API, but whoever fetches the
+    /// page is handed one, so a non-loopback bind hands the host API to anyone
+    /// who can reach the port (SRD SEC-014, §10.2). The caller is warned.
+    pub fn bind_on(core: Core, ui_root: &Path, address: &str, port: u16) -> Result<Self, String> {
+        let listener = TcpListener::bind((address, port))
+            .map_err(|e| format!("bind {}:{}: {}", address, port, e))?;
+        if address != "127.0.0.1" && address != "localhost" {
+            eprintln!(
+                "oko-host: warning: the shell is published on {} - anyone who can reach \
+                 that port is handed the host token and with it the host API",
+                address
+            );
+        }
         Ok(Self {
             core,
             ui_root: ui_root.to_path_buf(),
@@ -102,7 +119,10 @@ impl HttpUiServer {
             return Response::not_found();
         };
         let content_type = assets::content_type(&file);
-        if file.ends_with("index.html") {
+        // Every page this host serves is local UI that ships with ỌKỌ, so every
+        // page gets the token; a page fetched from the network never does
+        // (SRD §10.2 zone B, UI-009).
+        if content_type.starts_with("text/html") {
             let page = String::from_utf8_lossy(&bytes).replace(TOKEN_MARKER, &self.token);
             return Response::html(page);
         }

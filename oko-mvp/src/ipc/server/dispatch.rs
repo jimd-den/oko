@@ -6,7 +6,7 @@ use crate::ipc::message::{Direction, Message, IPC_VERSION};
 use crate::ipc::server::Core;
 
 use crate::ipc::server::capabilities;
-use crate::ipc::server::handlers::{app, blink, browser, render, status, terminal, ui};
+use crate::ipc::server::handlers::{app, blink, browser, computer, render, status, terminal, ui};
 
 pub fn handle_message(core: &mut Core, msg: &Message) -> Message {
     if msg.version != IPC_VERSION {
@@ -38,6 +38,7 @@ fn dispatch_request(core: &mut Core, msg: &Message) -> Result<crate::ipc::json::
     }
     match msg.route.as_str() {
         "host.status" => status::handle(core),
+        "computer.ask" => computer::handle_ask(core, &msg.payload),
         "host.terminal.create" => terminal::handle_create(core),
         "host.terminal.read" => terminal::handle_read(core, &msg.payload),
         "host.terminal.write" => terminal::handle_write(core, &msg.payload),

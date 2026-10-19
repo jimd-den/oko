@@ -12,13 +12,16 @@ use std::path::{Path, PathBuf};
 pub const USAGE_EXIT: i32 = 64;
 
 pub const USAGE: &str = "usage: oko-host [--engine <name>] [--transport stdio|http] \
-[--port <n>] [--ui <dir>] [--install-engine] [--open-engine]";
+[--port <n>] [--bind <addr>] [--page <path>] [--ui <dir>] \
+[--install-engine] [--open-engine]";
 
 pub struct Options {
     pub engine: String,
     pub transport: String,
     pub port: u16,
+    pub bind: String,
     pub ui_root: PathBuf,
+    pub page: String,
     pub install_engine: bool,
     pub open_engine: bool,
 }
@@ -45,12 +48,19 @@ pub fn parse(args: Vec<String>) -> Result<Options, String> {
         None => 0,
     };
     let ui_root = value_after("--ui").cloned().unwrap_or_else(|| "ui".into());
+    // Loopback by default: publishing the shell publishes the host API.
+    let bind = value_after("--bind")
+        .cloned()
+        .unwrap_or_else(|| "127.0.0.1".into());
+    let page = value_after("--page").cloned().unwrap_or_else(|| "/".into());
 
     Ok(Options {
         engine,
         transport,
         port,
+        bind,
         ui_root: PathBuf::from(ui_root),
+        page,
         install_engine: args.iter().any(|a| a == "--install-engine"),
         open_engine: args.iter().any(|a| a == "--open-engine"),
     })

@@ -17,6 +17,9 @@ pub fn required_for(route: &str) -> Vec<Capability> {
         | "host.terminal.close" => vec![Capability::TerminalCreate],
         "host.app.launch" | "host.app.stop" => vec![Capability::ProcessSpawn],
         "host.browser.open" => vec![Capability::BrowserNavigate],
+        // The computer answers with the state of the machine and can run a
+        // command, so it needs what a terminal needs.
+        "computer.ask" => vec![Capability::TerminalCreate],
         "blink.install" | "blink.fetch-checksum" | "ui.mode.desktop" => {
             vec![Capability::SystemConfigure]
         }

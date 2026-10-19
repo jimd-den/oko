@@ -74,14 +74,20 @@ fn main() {
 
 /// Serve the desktop shell on loopback for a browser engine to render.
 fn serve_ui(core: Core, options: &Options, workspace_root: &Path) -> Result<(), String> {
-    let server = HttpUiServer::bind(core, &options.ui_root, options.port)?;
+    let server = HttpUiServer::bind_on(core, &options.ui_root, &options.bind, options.port)?;
     let url = server.url();
+    let page_url = format!("{}{}", url, options.page.trim_start_matches('/'));
     println!("ui: {}", url);
+    println!("page: {}", page_url);
 
     let mut engine = if options.open_engine {
-        Some(cli::launch_engine(&options.engine, &url, workspace_root)?)
+        Some(cli::launch_engine(
+            &options.engine,
+            &page_url,
+            workspace_root,
+        )?)
     } else {
-        println!("open {} in any engine, or pass --open-engine", url);
+        println!("open {} in any engine, or pass --open-engine", page_url);
         None
     };
 

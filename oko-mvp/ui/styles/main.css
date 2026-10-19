@@ -80,6 +80,12 @@ body {
   overflow: hidden;
 }
 
+/* Explicit sizes, so the layout does not depend on what a pane happens to
+   contain: a flex row of content-sized children collapses as soon as one pane
+   is empty, which is how the first render of this shell looked broken. */
+#panel-terminal { flex: 0 0 40%; min-width: 0; }
+#panel-browser { flex: 1 1 0; min-width: 0; }
+
 .panel-header {
   display: flex;
   align-items: center;

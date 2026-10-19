@@ -5,6 +5,7 @@
 
 pub mod capability;
 pub mod command;
+pub mod computer;
 pub mod config;
 pub mod lifecycle;
 pub mod session;
