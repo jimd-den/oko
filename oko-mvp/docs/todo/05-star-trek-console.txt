@@ -1,0 +1,67 @@
+TASK 5 — A real Star Trek computer, not a terminal in LCARS colours
+===================================================================
+Status: NOT STARTED.  Depends on TASK 2 (surfaces) for anything graphical.
+
+THE OWNER'S WORDS
+-----------------
+"not terminal dressed as star trek but a star trek computer that people would
+use in the star trek universe created with html js and etc tools"
+
+WHAT EXISTS TODAY
+-----------------
+ui/apps/computer.html + computer.css + computer.js (56/66/88 lines). It is a
+transcript with a left rail of rounded bars, an amber header and readouts. It
+answers through `computer.ask` and the grammar lives in Rust
+(src/domain/computer.rs, tested). It is a FIRST APPLICATION and it is
+provisional. It looks like a terminal that has been painted.
+
+WHAT A STAR TREK COMPUTER ACTUALLY IS
+-------------------------------------
+Not decoration. The distinguishing features are structural:
+  - MANY PANELS AT ONCE, each a live readout with its own state, not one scroll
+    of text. Status, comms, navigation, sensors, engineering.
+  - DIRECT MANIPULATION: you press a panel, you do not type at a prompt. A
+    command bar exists, but it is one control among many.
+  - STATE IS VISIBLE: what the machine is doing is on the screen, changing,
+    without being asked.
+  - GRAPHICS: waveforms, diagrams, plots, a star chart — drawn, not printed.
+  - SOUND AND SPEECH: the computer talks back when it has something to say.
+  - THE PALETTE AND TYPE ARE A SYSTEM, not a colour scheme: amber, rose, tan,
+    violet, black; heavy rounded bars with elbow corners; uppercase labels;
+    hairline separators. (ui/apps/computer.css already has the palette right.)
+
+THE WORK
+--------
+1. Write down the panel inventory before drawing anything: which panels exist,
+   what each shows, where its data comes from. Every panel must map to a real
+   host route or be cut. A panel with fake data is worse than no panel.
+2. Panels that the host can already feed (check the route table in
+   src/ipc/server/dispatch.rs): host.status, host.browser.engine,
+   host.browser.capabilities, host.app.list, render.stats. Start there.
+3. Routes that are missing and would be needed: system readouts (load, memory,
+   disk), process list, log tail. Add them as normal routes with capabilities,
+   the same way computer.ask was added.
+4. The graphical panels need TASK 2: a surface that can draw. Until then, draw
+   with canvas/SVG from real data, and say so.
+5. Speech: window.speechSynthesis does not exist in Servo. Detect it and hide
+   the control (already the pattern in computer.js). Server-side speech is a
+   separate decision, not a detail.
+
+DONE WHEN
+---------
+  - At least four panels showing live host state, no fake data anywhere.
+  - A pointer-driven action works (press something, the machine does something)
+    in addition to the command bar.
+  - It renders correctly in Servo headless at 1280x800 (screenshot in the
+    commit) AND in a browser.
+  - Nothing in the UI decides anything: every action goes through the host API
+    and the capability policy.
+
+TRAPS
+-----
+  - Do not build the LCARS look at the expense of the structure. Structure is
+    the difference between a Star Trek computer and a themed terminal.
+  - Do not add a JS framework or a build step: ui/** is served live and that is
+    the hot-swap (ADR 0003).
+  - Accessibility is part of "people would use it": keyboard reachable, focus
+    visible, not colour-only status (UI-005).

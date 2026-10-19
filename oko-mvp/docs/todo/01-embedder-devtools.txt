@@ -1,0 +1,70 @@
+TASK 1 — Drive Servo instead of restarting it (the hinge)
+=========================================================
+Status: NOT STARTED.  This unblocks the vision. Everything else is decoration
+until it lands.
+
+WHY
+---
+Today the Servo adapter is a *process* embedder with three honest limits written
+into its preamble (src/browser/adapters/servo/mod.rs):
+  - navigate() stops the process and starts a new one on the new URL;
+  - execute_script() returns ScriptFailed;
+  - there is no way to read what the page looks like.
+So ỌKỌ cannot paint a page, cannot run script in one, and cannot browse without
+restarting. "Servo inside" (ADR 0003) and the Web pane becoming a surface both
+need a live session.
+
+WHAT WE KNOW FOR CERTAIN (checked, not assumed)
+-----------------------------------------------
+  - servoshell accepts --devtools=<addr:port>: `servoshell --help` prints
+    "--devtools=<127.0.0.1:7000>  Start remote devtools server on port".
+  - Servo speaks the Chrome DevTools Protocol (CDP), which is JSON messages over
+    a WebSocket.
+  - The binary is installed and runs here: version Servo 0.7.0-aac43a3f3.
+
+UNVERIFIED — FIND OUT FIRST, BEFORE WRITING ANYTHING
+----------------------------------------------------
+  - Does this Servo build actually serve /json/list on the devtools port, and
+    what does it look like?  (curl it.)
+  - Which CDP domains does it implement? Guessing here wastes the whole task.
+    Check Target.createTarget, Page.navigate, Runtime.evaluate, and whatever
+    frame/screencast support exists.
+  - Does it need --headless to run devtools without a window?
+
+THE WORK
+--------
+1. Research step, no code: start servoshell with --devtools, curl the HTTP
+   endpoint, open one WebSocket by hand and read the greeting. Write down the
+   real domain list. This is a spike — delete it or turn it into the first test.
+2. A std-only WebSocket client in the host: HTTP upgrade, RFC6455 framing
+   (text frames, masking, ping/pong, close). No crates: this is ~200 lines and
+   the project already hand-writes its JSON. Keep it a package from the start
+   (handshake / frame / client), because one file will not hold it.
+3. A `DevToolsSession` behind the existing engine port: connect, create a target,
+   navigate, evaluate, close. It must fail honestly when the engine is absent.
+4. Replace the restart-on-navigate behaviour with a real navigate.
+   `execute_script` stops returning ScriptFailed.
+
+WHERE
+-----
+  src/browser/adapters/servo/         the adapter that changes
+  src/browser/adapters/engine_binary/launch.rs   already passes --devtools? No:
+                                      session_argv is [binary, url]. Extend it.
+  new: src/browser/devtools/          handshake, frames, client
+
+DONE WHEN
+---------
+  - `host.browser.open {url}` then `navigate` on the same session shows the new
+    page without a new pid appearing.
+  - `execute_script` returns a value from the live page.
+  - A test drives all of it against a stand-in, and one manual run against the
+    real binary is recorded in the commit.
+  - make check green.
+
+TRAPS
+-----
+  - Servo's devtools may be partial. If Runtime.evaluate is missing, say so in
+    the adapter's preamble rather than pretending.
+  - A WebSocket client is easy to get subtly wrong (fragmentation, continuation
+    frames, masking). Test the framing against fixed byte sequences, not against
+    the live server only.

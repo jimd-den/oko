@@ -1,0 +1,56 @@
+TASK 4 — PAM: the console authenticates, the screen does not decide
+==================================================================
+Status: DECIDED (docs/adr/0002), NOT STARTED.  Independent of TASKS 1-3.
+Security work: do it slowly, and do not delegate it.
+
+THE DECISION, IN ONE LINE
+-------------------------
+Policy is native and unthemeable, privilege is one small socket helper, and the
+login screen is a theme that cannot say yes.
+
+WHAT WE KNOW FOR CERTAIN
+------------------------
+  - /lib/aarch64-linux-gnu/libpam.so.0 is present (0.85.1).
+  - /etc/pam.d/login is the standard Shadow stack, with pam_faildelay 3s.
+  - There is NO /usr/include/security/pam_appl.h: the build needs libpam0g-dev
+    for headers, or hand-declared pam_* FFI (this crate already declares FFI).
+  - su and login are root-owned, because pam_unix reads /etc/shadow and
+    pam_open_session needs privilege. That is why a helper exists at all.
+
+THE WORK, IN ORDER
+------------------
+1. `AuthPort` in src/ports/ with a contract docstring:
+       authenticate(credentials) -> Result<Session, AuthError>
+   Pure trait, no implementation. Its tests are fake-adapter tests.
+2. `oko-authd` — root, unix socket, SO_PEERCRED checked on every request, does
+   pam_authenticate then pam_open_session, answers success/failure and NOTHING
+   else: no module text, no timing detail, so it cannot enumerate users.
+   A separate binary target. Small enough to review in one sitting.
+3. `PamAuth` adapter in src/adapters/ talking to the socket. Never links PAM
+   itself; never runs privileged.
+4. A `oko` PAM service file, a copy of login's stack, shipped in packaging/.
+5. The theme: ui/themes/login/*, served like any other UI. It posts to the host
+   and renders the answer. It cannot choose the adapter, change policy, read a
+   credential after submission, or grant a capability. Same rule as CFG-008.
+6. Profile value: auth = "pam" (appliance stays available as a mode, not the
+   default).
+
+DONE WHEN
+---------
+  - A correct password authenticates; a wrong one fails, with the failure delay
+    the stack defines.
+  - The console process and oko-host are UNPRIVILEGED and still cannot read
+    /etc/shadow.
+  - A themed login screen can be swapped without touching Rust, and a test
+    proves a theme cannot change the adapter or grant a capability.
+  - The threat model in ADR 0002 is re-checked against what was actually built.
+
+TRAPS
+-----
+  - Do not put the password anywhere it can be logged (SEC-007). Check crash
+    reports and the IPC layer too, not just the obvious path.
+  - Do not build a setuid console. It is explicitly rejected: a setuid binary
+    parsing untrusted input is the vulnerability this design exists to avoid.
+  - A failed console start must fall back to getty on tty1 (issue #3). A machine
+    with no way in is worse than a machine with a login prompt.
+  - Rate limiting and secure attention are part of "PAM mode", not polish.

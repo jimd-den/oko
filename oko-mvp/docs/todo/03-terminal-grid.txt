@@ -1,0 +1,66 @@
+TASK 3 — Finish #5: the VT grid
+===============================
+Status: HALF DONE.  Small, self-contained, and the most visible win. Do this
+first if TASK 1 needs research time.
+
+WHERE IT IS
+-----------
+Real PTY landed: portable-pty opens a kernel PTY, spawns $SHELL, drives the
+master, reports the shell's own exit status, resizes. `sh -c` stub deleted.
+The package is src/adapters/portable_pty/{mod,session,tests}.rs (130/91/97 lines).
+
+WHAT IS MISSING
+---------------
+The emulator. alacritty_terminal 0.26 is a dependency but its cell grid is not
+wired, so read_output returns RAW BYTES. Visible symptom: the console answers
+like a terminal instead of like a computer —
+
+    "echo hello"  ->  echo hello
+                      hello
+                      user@host:~$
+
+It should say `hello`.
+
+THE API — ALREADY READ OUT OF THE CRATE'S OWN SOURCE, DO NOT RE-DERIVE
+---------------------------------------------------------------------
+    let size = ScreenSize::new(COLS, ROWS);   // impl Dimensions: total_lines,
+                                              // screen_lines, columns
+    let mut term = Term::new(Config::default(), &size, VoidListener);
+    let mut parser = alacritty_terminal::vte::Parser::new();
+    parser.advance(&mut term, bytes);         // the canonical feed
+    for cell in term.renderable_content().display_iter { /* cell.point, cell.c */ }
+
+Evidence: `Term::new(Config::default(), &size, VoidListener)` appears in the
+crate's selection.rs and term/mod.rs; event_loop.rs:154 feeds with
+`state.parser.advance(&mut **terminal, ...)`. `TermSize` EXISTS BUT LIVES IN
+`pub mod test`, so implement `Dimensions` locally — do not borrow test support.
+
+THE WORK
+--------
+1. RED first: a test that writes `echo hello` to a session and asserts the
+   rendered screen contains "hello" AND does not contain the command echo.
+   Watch it fail against the raw-buffer implementation.
+2. `ScreenSize` + `Dimensions`, `Term` + `Vte` per session in session.rs.
+3. Feed the drained bytes into the parser; render the grid in read_output.
+4. Then the two tests that currently assert "contains" (in
+   src/ipc/server/handlers/terminal.rs and computer/tests.rs) can go back to
+   asserting exactly, because the echo and prompt are no longer in the output.
+   That is the point of the task: it is what makes the console read like a
+   computer.
+5. Consider whether "a command with no output says so" can come back. It was
+   replaced because the raw buffer made it unanswerable; with a grid it is
+   answerable again.
+
+DONE WHEN
+---------
+  - `echo hello` renders as `hello` in a test that saw the echo before.
+  - The console at /apps/computer.html answers `echo hello` with `hello`.
+  - make check green; the adapter package still under 200 lines per file
+    (a grid module of its own is the likely seam).
+
+TRAPS
+-----
+  - Terminal size: the PTY is 80x24 today and resize() exists. The grid must be
+    resized with it or the render is wrong after a resize.
+  - Do not lose bytes on resize; alacritty handles reflow, the buffer handoff is
+    ours.

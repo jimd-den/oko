@@ -1,0 +1,50 @@
+TASK 2 — The Web pane becomes a surface, and frames stream to the view
+=====================================================================
+Status: NOT STARTED.  Depends on TASK 1.
+
+WHY
+---
+The Web pane is an <iframe> today (ui/scripts/panes.js). That means the BROWSER
+showing the shell does the browsing: its engine, its cookies, its framing rules.
+That is why github, google and youtube render blank — they send x-frame-options
+and refuse to be framed. ỌKỐ is supposed to own that rendering (ADR 0003).
+
+WHAT IT BECOMES
+---------------
+A surface: a rectangle the host paints. The shell draws pixels and sends input;
+it does not decide what a page looks like. The same surface serves:
+  - a browser displaying the shell over HTTP,
+  - a Servo window displaying the shell,
+  - the DRM/KMS presenter (issue #1) on a machine with no display server,
+  - later, a network peer.
+That is why it is one effort and not four.
+
+THE WORK
+--------
+1. Decide the frame format and write it down before coding: raw RGBA? PNG per
+   frame (Servo's -o already produces PNG)? A dirty-rectangle protocol? The
+   naive full-frame-per-change is fine on loopback and wrong over a network —
+   say which one is being built and what it costs.
+2. Find out how to get frames continuously. UNVERIFIED: whether Servo's devtools
+   can stream frames at all. If it cannot, the fallback is repeated headless
+   renders with a timeout-kill (issue #1's notes say `-z` does not exit on its
+   own), and that is a much worse pipeline. FIND THIS OUT BEFORE DESIGNING.
+3. Input: pointer and keyboard events from the view to the session. The command
+   model already has the shape (SRD §7.3); this is a new route, not a new model.
+4. The shell side: a pane kind "surface" that blits frames onto a canvas and
+   forwards input. It must degrade clearly when the host has no engine.
+
+DONE WHEN
+---------
+  - A remote page renders INSIDE the shell, in Chrome, with the host's Servo
+    doing the rendering (prove it: kill the Servo process and the pane stops).
+  - A page that refuses framing (github) renders anyway, because no iframe is
+    involved.
+  - Frame rate and CPU cost measured on this machine and written down.
+
+TRAPS
+-----
+  - Bandwidth: a 1280x800 RGBA frame is 4 MB. Say what is sent and how often.
+  - Do not put the frame pump on the same thread as the message loop.
+  - Keep the capability check: a surface showing a URL still needs
+    browser.navigate, and a surface is still untrusted content (zone C).

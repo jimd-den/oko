@@ -1,0 +1,72 @@
+OPEN DECISIONS AND DEBT — waiting on the owner
+=============================================
+These are not tasks. They are things I will not decide alone, or that are
+actively wrong right now.
+
+1. THE CONSOLE IS PUBLISHED ON 0.0.0.0  (SECURITY, ACTIVE)
+----------------------------------------------------------
+  systemd --user unit `oko-web` binds 0.0.0.0:8099. Anyone who can reach that
+  port is served the page WITH the session token in it, and the token is what
+  gates an API that runs shell commands as the user. Container IP 100.115.92.26.
+  Loopback is the default for exactly this reason and the host prints a warning
+  on every non-loopback bind.
+  Options: (a) add a password before the token, (b) allow-list, (c) stop it.
+  I recommend (a) or (c) before this machine does anything else.
+
+2. THREE COMMITS ON MASTER DO NOT BUILD IN ISOLATION
+---------------------------------------------------
+  189f237, b792bab, 8c95e5b. HEAD is green; bisecting hits them. Cause: I
+  verified the working tree at each step instead of the commit, and in each case
+  the commit disagrees with its own parent.
+  Fix: rewrite 189f237..HEAD and `git push --force-with-lease`. NOT DONE because
+  AGENTS.md §10 forbids force-push without explicit instruction this session.
+  Every rewritten commit would be checked out in a worktree and gated first.
+
+3. AGENTS.md §0 IS UNFILLED, AND THE FILE IS INCOMPLETE
+------------------------------------------------------
+  All 14 {{SLOT}}s are still placeholders, and there is no Appendix C or D — the
+  file ends mid-sentence inside Appendix B. Its own rule says: if a slot is
+  unfilled, stop and ask. Derived values, each one RUN on this machine:
+      PROJECT        ỌKỌ — a terminal-first desktop environment that owns its
+                     own rendering, for a person who lives in a terminal
+      LANGUAGE/STACK Rust 1.99.1, edition 2021; UI in HTML/CSS/JS; zero build step
+      UNIT_CMD       cargo test --offline --lib            (0.3 s, 119 tests)
+      CHECK_CMD      make check
+      LINE_CHECK_CMD python3 tools/check_line_budget.py
+      LINT_CMD       cargo clippy --offline --jobs 1 --all-targets -- -D warnings
+      FMT_CMD        cargo fmt
+      TYPECHECK_CMD  cargo check --offline --jobs 1 --all-targets
+      MAX_FILE_LINES 200
+      TEST_DIR       tests/
+      ADR_DIR        docs/adr/
+      REPORT_DIR     docs/reports/
+      FORBIDDEN      AGENTS.md; third_party/**; downloads/**; toolchain/versions.lock
+                     without a decision record
+  I have not touched the file: it is untracked and there is a vim swap file
+  beside it, so it may be open.
+
+4. DEPENDENCY POLICY IS NOW SPENT (needs a standing rule, not a one-off)
+-----------------------------------------------------------------------
+  ADR 0001 records the first exception to the zero-dependency rule
+  (alacritty_terminal + portable-pty, 86 crates in Cargo.lock). What is missing
+  is the RULE for the next one: who approves, what gets vendored, and whether
+  `cargo vendor` is required for an air-gapped build. AT-019's original meaning
+  ("no dependencies at all") is gone and its test now asserts something weaker.
+
+5. SUBAGENTS FAILED 3 OF 3 IN THIS PROJECT
+------------------------------------------
+  A non-compiling tree with 4 silently disabled tests; a package of todo!()
+  stubs; twenty minutes with no files written. All three exited without a reply.
+  Working rule now: verify a child by running the gate, diff the test count, and
+  check that a `#[cfg(test)] mod tests;` was declared. Or do not delegate here.
+
+6. UNVERIFIED CLAIMS STILL IN THE TREE
+--------------------------------------
+  - The windowed engine: a servoshell window SHOULD appear on the desktop. Its
+    environment has DISPLAY=:0 and WAYLAND_DISPLAY=wayland-0 (checked in
+    /proc/<pid>/environ) and the process runs, but nobody has confirmed a window
+    is visible and usable, and servoshell's own UI (address bar? tabs?) has never
+    been inspected.
+  - Remote rendering inside the shell: the x-frame-options table in the last
+    report came from curl headers, not from rendering a page in a pane.
+  - Servo's devtools domains: entirely unknown (see TASK 1).

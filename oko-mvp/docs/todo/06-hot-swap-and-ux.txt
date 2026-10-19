@@ -1,0 +1,44 @@
+TASK 6 — Hot-swap, and the loop that makes UI work easy
+======================================================
+Status: PARTLY TRUE ALREADY.  Depends on TASK 2 for open surfaces.
+
+WHAT ALREADY WORKS
+------------------
+  - ui/** is served straight off disk by src/ipc/http (GET /<path>). There is no
+    build step, no bundler, no compile. Editing a file and reloading the page IS
+    the hot-swap. That property is real and should not be lost.
+  - Restarting the host picks up Rust changes:
+        cargo build --offline --jobs 2 --features servo
+        systemctl --user restart oko-web
+  - The owner asked for exactly this: "restart the server with the updates".
+
+WHAT IS MISSING
+---------------
+  1. A RELOAD SIGNAL. An open surface has no way to learn that a file changed,
+     so a designer edits, then reloads by hand, then loses the panel state.
+     Needed: a notification route (the IPC layer already has Direction::Notification)
+     and a small file watcher. Watch ui/** mtimes on a timer to start with —
+     inotify without crates is possible but is a bigger step.
+  2. SCAFFOLDING FOR A NEW APP. "the terminal can make a ui too" means a command
+     that creates ui/apps/<name>/{html,css,js} from a template and opens it.
+     There is a command model (SRD §7.3) and a parser already: this is a new
+     command plus a template, not a new subsystem.
+  3. A WAY TO SEE ERRORS. A broken app currently fails silently in the browser
+     console, which nobody is looking at. Surface JS errors and HTTP 404s
+     somewhere visible — the readouts panel is the obvious place.
+  4. THE LOOP, MEASURED: edit a file, see the change, in how many seconds and
+     how many steps? Write the number down. That number is the product.
+
+DONE WHEN
+---------
+  - Edit ui/apps/computer.css, and an open console repaints without a reload.
+  - `app new <name>` creates and opens a working app from a template.
+  - A missing asset or a JS error is visible in the UI, not only in a devtools
+    console nobody has open.
+
+TRAPS
+-----
+  - A file watcher that polls is fine; one that watches the whole tree is not.
+  - Reload must not throw away the user's terminal session: sessions live in the
+    host (TERM-003) and that must stay true across a UI reload.
+  - Do not add a dependency for this if a timer and mtimes will do.

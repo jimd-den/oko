@@ -1,0 +1,85 @@
+ỌKỌ — TODO MAP
+===============
+Last updated: 2026-10-19.  Every fact below was checked on the machine, not
+remembered.  Where something is unverified it says UNVERIFIED.
+
+THE VISION (docs/adr/0003)
+--------------------------
+ỌKỌ is a place, not an application:
+  - the terminal can MAKE a UI, not just print to one;
+  - HTML applications work directly with the computer (host API + capability
+    policy behind them);
+  - games can run against server-side Vulkan;
+  - minimal, hot-swappable, extremely flexible on machines that have nothing;
+  - the interface is a real Star Trek computer, not a terminal in LCARS colours.
+
+The load-bearing decision: ỌKỌ renders web content ITSELF. A page is rendered by
+the host's Servo, headless, never by whatever browser is displaying the shell.
+The host streams frames; the shell is a view that draws pixels and sends input.
+Same view in a browser, in a Servo window, on a DRM framebuffer, or over a
+network — the transport changes, the view does not.
+
+STATE OF THE WORLD RIGHT NOW
+----------------------------
+  gate        make check  -> 161 tests ALL OK, budget OK, clippy -D warnings clean
+  console     systemd --user unit `oko-web`, active, 0.0.0.0:8099
+              http://localhost:8099/apps/computer.html
+  engine      servo 0.7.0-aac43a3f3, state ready, binary at
+              third_party/engines/servo/servoshell (installed, digest verified)
+  terminal    REAL PTY (portable-pty), shell's own exit status, resize
+  not real    the VT grid (alacritty_terminal is a dependency, unwired), so
+              read_output returns raw bytes: echo, prompt, control sequences
+  not real    the Web pane is an iframe -> the browser showing the shell does the
+              browsing. github/google/youtube refuse to be framed.
+  not real    the console is a transcript with LCARS colours. Not a Star Trek UI.
+  exposure    the console is published on 0.0.0.0 and its token runs shell
+              commands as the user. SEE 99-open-decisions.txt
+
+ORDER (dependencies are real, not preferences)
+----------------------------------------------
+  1. 01-embedder-devtools.txt     THE HINGE. Nothing below it is honest without it.
+  2. 03-terminal-grid.txt         small, self-contained, finishes #5, visible win
+  3. 02-surface-frame-streaming.txt   needs 1. Also lands #1 (DRM) on real hardware
+  4. 05-star-trek-console.txt     needs 2 and 3
+  5. 04-pam-auth.txt              independent of 1-4; security work, do not rush
+  6. 06-hot-swap-and-ux.txt       needs 2
+  7. 99-open-decisions.txt        waiting on the owner
+
+ISSUES
+------
+  #1 DRM/KMS presenter        blocked on hardware: no /dev/dri, no /dev/fb0 here
+  #2 evdev input              blocked on hardware: no /dev/input here
+  #3 oko-ui boot service      blocked on #4 (auth)
+  #4 auth model               DECIDED: PAM. See docs/adr/0002, todo 04
+  #5 terminal core            HALF DONE: real PTY landed; grid outstanding (todo 03)
+
+HOW TO RUN AND CHECK THINGS
+---------------------------
+  build with the engine:  cargo build --offline --jobs 2 --features servo
+  the gate:               make check          (budget + typecheck + clippy + tests)
+  the console:            systemctl --user restart oko-web
+                          curl -sS -o /dev/null -w '%{http_code}\n' \
+                            http://127.0.0.1:8099/apps/computer.html
+  ask the host directly:  TOKEN=$(curl -sS http://127.0.0.1:8099/ | \
+                            sed -n 's/.*oko-token" content="\([a-f0-9]*\)".*/\1/p')
+                          curl -sS -X POST http://127.0.0.1:8099/api \
+                            -H "X-Oko-Token: $TOKEN" \
+                            -d '{"v":1,"id":"1","direction":"request",\
+                                 "route":"host.browser.engine","payload":{}}'
+  render a page headlessly, no display server needed:
+                          third_party/engines/servo/servoshell -z -o out.png \
+                            --screen-size=1280x800 <url>
+
+HOUSE RULES THAT BIT US ALREADY (AGENTS.md)
+-------------------------------------------
+  - test first; paste the RED, then the GREEN. A test that passes immediately
+    was not testing the new behaviour.
+  - 200 lines per file, tests included. Name the seam, never shuffle code.
+  - a split that moves a test module MUST declare `#[cfg(test)] mod tests;`.
+    This was forgotten twice, once by a subagent and once by me, and it silently
+    disabled 4 tests and then 6.
+  - verify the COMMIT, not the working tree: check it out in a worktree and run
+    the gate. Three commits on master do not build in isolation because of this.
+  - do not trust a subagent's summary, or its silence. Three of three failed
+    here: a broken tree with disabled tests, a package of todo!() stubs, and
+    twenty minutes that produced no files. Verify by running the gate.
