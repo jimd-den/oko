@@ -16,6 +16,9 @@ pub fn required_for(route: &str) -> Vec<Capability> {
         | "host.terminal.write"
         | "host.terminal.close" => vec![Capability::TerminalCreate],
         "host.app.launch" | "host.app.stop" => vec![Capability::ProcessSpawn],
+        "host.fs.read" => vec![Capability::FilesystemRead],
+        "host.fs.write" => vec![Capability::FilesystemWrite],
+        "host.fs.list" => vec![Capability::FilesystemRead],
         "host.browser.open" => vec![Capability::BrowserNavigate],
         // The computer answers with the state of the machine and can run a
         // command, so it needs what a terminal needs.

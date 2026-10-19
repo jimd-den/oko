@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   const hostCall = window.Oko.hostCall;
+  window.Oko.say = say;
   const el = (id) => document.getElementById(id);
 
   let sessionId = null;
@@ -118,6 +119,7 @@
     }, 60);
   }
 
+
   function wire() {
     el('prompt').addEventListener('submit', (event) => {
       event.preventDefault();
@@ -132,6 +134,8 @@
     el('btn-apps').addEventListener('click', loadApps);
     el('btn-capture').addEventListener('click', doCapture);
     el('btn-status').addEventListener('click', () => ask('status'));
+    el('btn-files').addEventListener('click', () => window.OkoFiles.load());
+    el('btn-save').addEventListener('click', () => window.OkoFiles.save());
 
     if (window.speechSynthesis) {
       const button = el('speak');
@@ -145,6 +149,7 @@
     setInterval(() => { el('clock').textContent = new Date().toLocaleTimeString(); el('s-time').textContent = new Date().toLocaleTimeString(); }, 1000);
 
     loadStatus(); loadEngine(); loadCapabilities(); loadApps();
+    window.OkoFiles.load();
     wave();
     ask('status');
   }

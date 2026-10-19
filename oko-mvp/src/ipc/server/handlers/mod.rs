@@ -4,6 +4,7 @@ pub mod app;
 pub mod blink;
 pub mod browser;
 pub mod computer;
+pub mod fs;
 pub mod render;
 pub mod status;
 pub mod terminal;

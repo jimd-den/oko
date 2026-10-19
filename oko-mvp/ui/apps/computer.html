@@ -66,6 +66,20 @@
           </form>
         </article>
 
+        <article class="panel" id="p-files" data-panel="files">
+          <h2>FILES</h2>
+          <div class="row"><span class="k">cwd</span><span class="v" id="f-cwd">.</span></div>
+          <ul id="file-list"></ul>
+          <button type="button" class="act" id="btn-files">REFRESH</button>
+        </article>
+
+        <article class="panel" id="p-editor" data-panel="editor">
+          <h2>EDITOR</h2>
+          <div class="row"><span class="k">file</span><span class="v" id="ed-name">none</span></div>
+          <textarea id="ed-text" spellcheck="false" aria-label="File contents"></textarea>
+          <button type="button" class="act" id="btn-save">SAVE</button>
+        </article>
+
         <article class="panel" id="p-sensors" data-panel="sensors">
           <h2>SENSORS</h2>
           <div class="row"><span class="k">capabilities</span><span class="v" id="cap-list">…</span></div>
@@ -84,6 +98,7 @@
   </div>
 
   <script src="../scripts/host-api.js"></script>
+  <script src="files.js"></script>
   <script src="computer.js"></script>
 </body>
 </html>

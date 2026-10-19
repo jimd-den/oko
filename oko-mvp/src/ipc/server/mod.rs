@@ -31,6 +31,8 @@ pub struct Core {
     /// `None` means it initialized. The engine is an optional service, so this
     /// is recorded rather than fatal (SRD ENG-004, ENG-008, §4.2).
     engine_unavailable: Option<String>,
+    /// The root the filesystem panel may read and write inside.
+    workspace_root: std::path::PathBuf,
 }
 
 impl Core {
@@ -51,7 +53,14 @@ impl Core {
             blink_installer,
             desktop_mode: false,
             engine_unavailable: None,
+            workspace_root: std::env::current_dir().unwrap_or_else(|_| ".".into()),
         }
+    }
+
+    /// Confine the filesystem panel to `root`.
+    pub fn with_workspace_root(mut self, root: std::path::PathBuf) -> Self {
+        self.workspace_root = root;
+        self
     }
 
     /// Start the optional services.
