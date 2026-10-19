@@ -22,7 +22,12 @@ pub trait TerminalPort: Send + Sync {
     fn create_session(&self) -> Result<PtySession, PtyError>;
     /// Write user input into the PTY.
     fn write_input(&self, session: &PtySession, bytes: &[u8]) -> Result<(), PtyError>;
-    /// Read rendered terminal output.
+    /// Read terminal output.
+    ///
+    /// Contract: returns what the session has produced since the last read. A
+    /// real shell answers when it answers, so an implementation may wait
+    /// briefly for output rather than returning an empty screen to a caller
+    /// that has just written to it. It must never wait without bound.
     fn read_output(&self, session: &PtySession) -> Result<String, PtyError>;
     fn resize(&self, _session: &PtySession, _cols: u16, _rows: u16) -> Result<(), PtyError> {
         Ok(())

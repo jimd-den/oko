@@ -3,7 +3,7 @@
 //! Exercises parse → validate → handle → present with real adapters owned
 //! inline in each test (avoiding dangling borrows from a helper function).
 
-use oko_core::adapters::{linux_process::LinuxProcessAdapter, linux_pty::LinuxPtyAdapter};
+use oko_core::adapters::{linux_process::LinuxProcessAdapter, portable_pty::PortablePtyAdapter};
 use oko_core::application::command_service::{CommandContext, CommandService};
 use oko_core::application::session_service::SessionService;
 use oko_core::domain::capability::{Capability, CapabilityPolicy};
@@ -24,7 +24,7 @@ fn full_policy() -> CapabilityPolicy {
 
 fn make_ctx<'a>(
     process: &'a LinuxProcessAdapter,
-    terminal: &'a LinuxPtyAdapter,
+    terminal: &'a PortablePtyAdapter,
     policy: &'a CapabilityPolicy,
     sessions: &'a mut SessionService,
 ) -> CommandContext<'a> {
@@ -41,7 +41,7 @@ fn execute_help_returns_help_text() {
     let mut svc = CommandService::new();
     register_basic(&mut svc);
     let process = LinuxProcessAdapter::new();
-    let terminal = LinuxPtyAdapter::new();
+    let terminal = PortablePtyAdapter::new();
     let policy = full_policy();
     let mut sessions = SessionService::new();
     let mut ctx = make_ctx(&process, &terminal, &policy, &mut sessions);
@@ -54,7 +54,7 @@ fn execute_status_returns_running() {
     let mut svc = CommandService::new();
     register_basic(&mut svc);
     let process = LinuxProcessAdapter::new();
-    let terminal = LinuxPtyAdapter::new();
+    let terminal = PortablePtyAdapter::new();
     let policy = full_policy();
     let mut sessions = SessionService::new();
     let mut ctx = make_ctx(&process, &terminal, &policy, &mut sessions);
@@ -70,7 +70,7 @@ fn execute_app_launch_then_list_then_stop() {
     let mut svc = CommandService::new();
     register_basic(&mut svc);
     let process = LinuxProcessAdapter::new();
-    let terminal = LinuxPtyAdapter::new();
+    let terminal = PortablePtyAdapter::new();
     let policy = full_policy();
     let mut sessions = SessionService::new();
     let mut ctx = make_ctx(&process, &terminal, &policy, &mut sessions);
@@ -93,7 +93,7 @@ fn execute_unknown_command_errors() {
     let mut svc = CommandService::new();
     register_basic(&mut svc);
     let process = LinuxProcessAdapter::new();
-    let terminal = LinuxPtyAdapter::new();
+    let terminal = PortablePtyAdapter::new();
     let policy = full_policy();
     let mut sessions = SessionService::new();
     let mut ctx = make_ctx(&process, &terminal, &policy, &mut sessions);
@@ -107,7 +107,7 @@ fn execute_denied_without_capability() {
     let mut svc = CommandService::new();
     register_basic(&mut svc);
     let process = LinuxProcessAdapter::new();
-    let terminal = LinuxPtyAdapter::new();
+    let terminal = PortablePtyAdapter::new();
     let empty_policy = CapabilityPolicy::new();
     let mut sessions = SessionService::new();
     let mut ctx = make_ctx(&process, &terminal, &empty_policy, &mut sessions);
@@ -140,7 +140,7 @@ fn execute_ui_mode_and_browser_engine() {
         ))
     });
     let process = LinuxProcessAdapter::new();
-    let terminal = LinuxPtyAdapter::new();
+    let terminal = PortablePtyAdapter::new();
     let policy = full_policy();
     let mut sessions = SessionService::new();
     let mut ctx = make_ctx(&process, &terminal, &policy, &mut sessions);

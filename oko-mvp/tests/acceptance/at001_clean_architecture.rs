@@ -27,13 +27,13 @@ fn core_layers_compile_without_ui_browser_graphics() {
     fn _assert_storage_port<P: oko_core::ports::storage::StoragePort>() {}
     fn _assert_clock_port<P: oko_core::ports::clock::ClockPort>() {}
     _assert_process_port::<oko_core::adapters::linux_process::LinuxProcessAdapter>();
-    _assert_terminal_port::<oko_core::adapters::linux_pty::LinuxPtyAdapter>();
+    _assert_terminal_port::<oko_core::adapters::portable_pty::PortablePtyAdapter>();
     _assert_storage_port::<oko_core::adapters::file_storage::FileStorageAdapter>();
     _assert_clock_port::<oko_core::adapters::system_clock::SystemClockAdapter>();
 
     // adapters (platform, behind ports)
     let _proc = oko_core::adapters::linux_process::LinuxProcessAdapter::new();
-    let _pty = oko_core::adapters::linux_pty::LinuxPtyAdapter::new();
+    let _pty = oko_core::adapters::portable_pty::PortablePtyAdapter::new();
     let _store = oko_core::adapters::file_storage::FileStorageAdapter::new();
     let _clock = oko_core::adapters::system_clock::SystemClockAdapter::new();
 

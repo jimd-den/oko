@@ -7,7 +7,7 @@
 //! assertion instead of hiding.
 
 use super::scripted_transport::ScriptedTransport;
-use oko_core::adapters::{linux_process::LinuxProcessAdapter, linux_pty::LinuxPtyAdapter};
+use oko_core::adapters::{linux_process::LinuxProcessAdapter, portable_pty::PortablePtyAdapter};
 use oko_core::application::session_service::SessionService;
 use oko_core::browser::adapters::blink_install::BlinkInstaller;
 use oko_core::browser::ports::engine::{
@@ -132,7 +132,7 @@ pub fn run_host_with_policy(
     let bus = MessageBus::new(transport.clone());
     let core = Core::new(
         Box::new(LinuxProcessAdapter::new()),
-        Box::new(LinuxPtyAdapter::new()),
+        Box::new(PortablePtyAdapter::new()),
         SessionService::new(),
         policy,
         engine,

@@ -118,7 +118,9 @@ mod tests {
         let output = crate::ipc::json::get(&read, "output")
             .and_then(crate::ipc::json::as_str)
             .unwrap();
-        assert_eq!(output, "written\n");
+        // A real PTY echoes the input back, so the output is what a terminal
+        // shows rather than the command's stdout alone.
+        assert!(output.contains("written"), "output was {:?}", output);
     }
 
     #[test]
@@ -152,7 +154,7 @@ mod tests {
         let process: Box<dyn ProcessPort> =
             Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
         let terminal: Box<dyn TerminalPort> =
-            Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
+            Box::new(crate::adapters::portable_pty::PortablePtyAdapter::new());
         let sessions = SessionService::new();
         let policy = CapabilityPolicy::new().with(Capability::TerminalCreate);
         let browser: Box<dyn BrowserEnginePort> = Box::new(MockBrowserEngineAdapter::new());

@@ -16,7 +16,7 @@
 mod cli;
 
 use cli::Options;
-use oko_core::adapters::{linux_process::LinuxProcessAdapter, linux_pty::LinuxPtyAdapter};
+use oko_core::adapters::{linux_process::LinuxProcessAdapter, portable_pty::PortablePtyAdapter};
 use oko_core::application::session_service::SessionService;
 use oko_core::browser::adapters::{blink_install::BlinkInstaller, select};
 use oko_core::domain::capability::{Capability, CapabilityPolicy};
@@ -42,7 +42,7 @@ fn main() {
 
     let core = Core::new(
         Box::new(LinuxProcessAdapter::new()),
-        Box::new(LinuxPtyAdapter::new()) as Box<dyn TerminalPort>,
+        Box::new(PortablePtyAdapter::new()) as Box<dyn TerminalPort>,
         SessionService::new(),
         policy(),
         select::engine_for(&options.engine, &workspace_root),

@@ -94,7 +94,7 @@ mod tests {
         let process: Box<dyn ProcessPort> =
             Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
         let terminal: Box<dyn TerminalPort> =
-            Box::new(crate::adapters::linux_pty::LinuxPtyAdapter::new());
+            Box::new(crate::adapters::portable_pty::PortablePtyAdapter::new());
         let sessions = SessionService::new();
         let policy = CapabilityPolicy::new().with(Capability::SystemConfigure);
         let browser: Box<dyn BrowserEnginePort> = Box::new(MockBrowserEngineAdapter::new());

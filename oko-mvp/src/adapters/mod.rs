@@ -6,5 +6,5 @@
 
 pub mod file_storage;
 pub mod linux_process;
-pub mod linux_pty;
+pub mod portable_pty;
 pub mod system_clock;

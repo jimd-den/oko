@@ -4,7 +4,7 @@
 //! point of this transport is that something outside this process can use it.
 
 use super::*;
-use crate::adapters::{linux_process::LinuxProcessAdapter, linux_pty::LinuxPtyAdapter};
+use crate::adapters::{linux_process::LinuxProcessAdapter, portable_pty::PortablePtyAdapter};
 use crate::application::session_service::SessionService;
 use crate::browser::adapters::{blink_install::BlinkInstaller, mock::MockBrowserEngineAdapter};
 use crate::domain::capability::{Capability, CapabilityPolicy};
@@ -18,7 +18,7 @@ use std::path::PathBuf;
 fn server() -> HttpUiServer {
     let core = Core::new(
         Box::new(LinuxProcessAdapter::new()),
-        Box::new(LinuxPtyAdapter::new()),
+        Box::new(PortablePtyAdapter::new()),
         SessionService::new(),
         CapabilityPolicy::new()
             .with(Capability::TerminalCreate)
