@@ -6,7 +6,6 @@
   const el = (id) => document.getElementById(id);
 
   let sessionId = null;
-  let speaking = false;
 
   function say(kind, text) {
     const line = document.createElement('div');
@@ -14,9 +13,6 @@
     line.textContent = text;
     el('transcript').appendChild(line);
     el('transcript').scrollTop = el('transcript').scrollHeight;
-    if (kind === 'it' && speaking && window.speechSynthesis) {
-      window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-    }
   }
 
   async function ask(text) {
@@ -150,15 +146,6 @@
     el('app-close').addEventListener('click', closeApp);
     el('btn-files').addEventListener('click', () => window.OkoFiles.load());
     el('btn-save').addEventListener('click', () => window.OkoFiles.save());
-
-    if (window.speechSynthesis) {
-      const button = el('speak');
-      button.hidden = false;
-      button.addEventListener('click', () => {
-        speaking = !speaking;
-        button.textContent = speaking ? 'SPEAKING ON' : 'SPEAK REPLIES';
-      });
-    }
 
     setInterval(() => { el('clock').textContent = new Date().toLocaleTimeString(); el('s-time').textContent = new Date().toLocaleTimeString(); }, 1000);
 

@@ -67,9 +67,6 @@ canvas { width: 100%; height: 60px; background: var(--black); border: 1px solid 
 .readout { background: var(--dim); color: var(--tan); padding: 8px 10px; border-radius: 4px 0 0 4px; }
 .readout .key { display: block; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--amber); }
 .readout .value { display: block; margin-top: 3px; font-size: 12px; word-break: break-word; }
-#speak { background: var(--violet); color: var(--black); border: none; height: 28px; border-radius: 14px 0 0 14px;
-  font-weight: 700; letter-spacing: 0.14em; font-size: 11px; cursor: pointer; }
-#speak[hidden] { display: none; }
 
 #app-overlay { position: fixed; inset: 0; background: var(--black);
   display: grid; grid-template-rows: 40px 1fr; z-index: 10; }
