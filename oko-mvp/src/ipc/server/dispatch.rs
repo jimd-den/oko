@@ -42,6 +42,7 @@ fn dispatch_request(core: &mut Core, msg: &Message) -> Result<crate::ipc::json::
         "host.terminal.create" => terminal::handle_create(core),
         "host.terminal.read" => terminal::handle_read(core, &msg.payload),
         "host.terminal.write" => terminal::handle_write(core, &msg.payload),
+        "host.terminal.close" => terminal::handle_close(core, &msg.payload),
         "host.app.list" => app::handle_list(core),
         "host.app.create" => app_new::handle_create(core, &msg.payload),
         "host.fs.list" => fs::handle_list(core, &msg.payload),

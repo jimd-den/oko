@@ -1,5 +1,5 @@
 //! Host API permission tests, moved out of `host_api.rs` to keep that module
-//! under the 200-line ceiling. All eight drive the pure `validate_request`.
+//! under the 200-line ceiling. Each test drives the pure `validate_request`.
 //! A child module of `host_api`, so `use super::*` still reaches the vocabulary.
 
 use super::*;

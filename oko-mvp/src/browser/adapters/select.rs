@@ -10,7 +10,7 @@ use super::unavailable::UnavailableBrowserEngine;
 use crate::browser::ports::engine::BrowserEnginePort;
 use std::path::Path;
 
-/// The engine backends compiled into this build, in preference order.
+/// The engine names this build can serve, in the order they are reported.
 pub fn engine_names() -> Vec<&'static str> {
     vec!["mock", "servo"]
 }
@@ -21,8 +21,6 @@ pub fn engine_names() -> Vec<&'static str> {
 /// name cannot be served, the result is an adapter that reports that name and
 /// refuses to work (SRD ENG-008).
 pub fn engine_for(name: &str, workspace_root: &Path) -> Box<dyn BrowserEnginePort> {
-    // Only the process-backed engine needs the workspace to find its binary.
-    let _ = workspace_root;
     match name {
         "mock" => Box::new(MockBrowserEngineAdapter::new()),
         "servo" => Box::new(super::servo::ServoBrowserEngineAdapter::located(

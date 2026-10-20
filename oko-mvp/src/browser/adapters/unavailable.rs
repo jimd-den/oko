@@ -1,4 +1,4 @@
-//! An engine named by the profile that this build does not contain.
+//! An engine name this build does not contain.
 //!
 //! Selection is by name (SRD ENG-002). A name the build cannot serve must be
 //! reported as unavailable instead of being quietly replaced by another engine,

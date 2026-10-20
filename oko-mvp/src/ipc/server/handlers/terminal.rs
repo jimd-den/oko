@@ -56,6 +56,21 @@ pub fn handle_read(
     Ok(object(vec![("output".into(), str(&output))]))
 }
 
+/// End a session and release its PTY (SRD TERM-008, APP-004).
+pub fn handle_close(
+    server: &mut Core,
+    payload: &crate::ipc::json::JsonValue,
+) -> Result<crate::ipc::json::JsonValue, String> {
+    let session_id = payload_string(payload, "session_id")?;
+    server
+        .sessions
+        .stop(&SessionId(session_id))
+        .ok_or_else(|| "session not found".to_string())?;
+    Ok(object(vec![
+        ("closed".into(), crate::ipc::json::bool(true)),
+    ]))
+}
+
 fn str(v: &str) -> crate::ipc::json::JsonValue {
     crate::ipc::json::JsonValue::String(v.into())
 }
@@ -131,6 +146,20 @@ mod tests {
             ("text".into(), str("echo hi\n")),
         ]);
         assert!(handle_write(&mut server, &payload).is_err());
+    }
+
+    #[test]
+    fn handle_close_ends_the_session() {
+        let mut server = test_server();
+        let created = handle_create(&mut server).unwrap();
+        let id = crate::ipc::json::get(&created, "session_id")
+            .and_then(crate::ipc::json::as_str)
+            .unwrap()
+            .to_string();
+        let payload = crate::ipc::json::object(vec![("session_id".into(), str(&id))]);
+        assert!(handle_close(&mut server, &payload).is_ok());
+        assert!(handle_read(&mut server, &payload).is_err());
+        assert!(handle_close(&mut server, &payload).is_err());
     }
 
     #[test]

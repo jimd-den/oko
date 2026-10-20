@@ -8,10 +8,10 @@
 //!   --transport http    the desktop shell, served on loopback for a browser
 //!                       engine to render and drive (SRD UI-001, UI-008)
 //!
-//! The engine is chosen by name: `--engine <name>`, or the profile's
-//! `[browser] engine` when the flag is absent (SRD ENG-002). An engine this
-//! build cannot serve is reported as unavailable and the core keeps working
-//! (SRD ENG-008, §4.2); it is never replaced by another.
+//! The engine is chosen by name: `--engine <name>`, or `Config::default()`
+//! while profile loading is not yet wired to the composition root. An engine
+//! this build cannot serve is reported as unavailable and the core keeps
+//! working (SRD ENG-008, §4.2); it is never replaced by another.
 
 mod cli;
 
