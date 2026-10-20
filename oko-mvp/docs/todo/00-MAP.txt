@@ -1,6 +1,6 @@
 ỌKỌ — TODO MAP
 ===============
-Last updated: 2026-10-19.  Every fact below was checked on the machine, not
+Last updated: 2026-10-20.  Every fact below was checked on the machine, not
 remembered.  Where something is unverified it says UNVERIFIED.
 
 THE VISION (docs/adr/0003)
@@ -21,7 +21,13 @@ network — the transport changes, the view does not.
 
 STATE OF THE WORLD RIGHT NOW
 ----------------------------
-  gate        make check  -> 168 tests ALL OK, budget OK, clippy -D warnings clean
+  gate        last full make check: 168 tests ALL OK, before the display core.
+              Display core: 15 targeted tests green; cargo check/clippy --lib
+              green under a 1.2 GB cap. Full gate deferred (container RAM).
+  display     src/display: Surface, Compositor, Presenter, HeadlessPresenter,
+              TerminalPresenter (truecolor ANSI half blocks). Pure, no deps,
+              no device. ADR 0005. Servo renders offscreen with no DISPLAY:
+              measured ~1 s for 320x200, llvmpipe; first cold run can hang.
   console     systemd --user unit `oko-web`, active, 0.0.0.0:8099
               http://localhost:8099/apps/computer.html
   engine      servo 0.7.0-aac43a3f3, state ready, binary at
@@ -29,8 +35,8 @@ STATE OF THE WORLD RIGHT NOW
               Servo is the ONLY engine in the build; Blink scaffolding removed
               (docs/adr/0004). `mock` is a dev stub, never a fallback.
   terminal    REAL PTY (portable-pty), shell's own exit status, resize
-  not real    the VT grid (alacritty_terminal is a dependency, unwired), so
-              read_output returns raw bytes: echo, prompt, control sequences
+  terminal    REAL VT grid (alacritty_terminal): read_output renders the screen,
+              not the raw byte stream
   not real    the Web pane is an iframe -> the browser showing the shell does the
               browsing. github/google/youtube refuse to be framed.
   not real    the console is a transcript with LCARS colours. Not a Star Trek UI.
@@ -39,7 +45,10 @@ STATE OF THE WORLD RIGHT NOW
 
 ORDER (dependencies are real, not preferences)
 ----------------------------------------------
-  1. 01-embedder-devtools.txt     THE HINGE. Nothing below it is honest without it.
+  0. display server               ADR 0005. Surface/compositor/presenter core
+                                  landed. Next: wire a presenter to a session and
+                                  add the surface protocol + input.
+  1. 01-embedder-devtools.txt     THE HINGE for live web surfaces.
   2. 03-terminal-grid.txt         small, self-contained, finishes #5, visible win
   3. 02-surface-frame-streaming.txt   needs 1. Also lands #1 (DRM) on real hardware
   4. 05-star-trek-console.txt     needs 2 and 3

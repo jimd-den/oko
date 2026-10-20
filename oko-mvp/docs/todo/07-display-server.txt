@@ -1,0 +1,51 @@
+TASK 7 — The display server: surfaces, presenters, and a bare TTY
+==================================================================
+Status: CORE LANDED (ADR 0005). The protocol, input and device presenters are
+not.
+
+WHAT EXISTS
+-----------
+src/display/ is device-independent and dependency-free:
+  surface.rs     Surface (RGBA8888, position, z, visible), Frame
+  compositor.rs  painter's algorithm by z, clipping, source-over alpha
+  presenter.rs   Presenter trait, OutputSize, HeadlessPresenter
+  terminal.rs    TerminalPresenter: frame -> truecolor ANSI half blocks
+  15 tests, all pure; no clock, network, device or Servo.
+
+Verified on this machine: servoshell -z -x -o frame.bmp renders with DISPLAY
+and WAYLAND_DISPLAY unset, through Mesa llvmpipe, in about a second. The first
+cold run hung; repeat runs are reliable. A 320x200 BMP converted to 80x24 ANSI
+half blocks showed the page and its orange heading.
+
+WHAT IS MISSING, IN ORDER
+-------------------------
+1. A surface protocol. An app process connects to the host, creates a surface,
+   commits frames and receives input. Type and version the messages; the host
+   already has a typed message layer. Start over a Unix socket on loopback.
+   Decide the frame transport before coding: full RGBA per commit is 4 MB at
+   1280x800. Local: shared memory (memfd/shm) or damage rectangles. Remote:
+   tiles or compression.
+2. Input routing. Pointer and key events go to the focused surface, with the
+   capability check before delivery. Linux/FreeBSD evdev, OpenBSD/NetBSD
+   wscons, terminal keys, remote events.
+3. Wire a session to a presenter. The first honest end to end:
+   Servo -> BMP/RGBA -> Frame -> TerminalPresenter on a real TTY. Then the same
+   frame through a framebuffer presenter.
+4. Framebuffer presenter. Linux /dev/fb0 and FreeBSD vt(4) first; OpenBSD
+   wscons next. No GPU, no display server. Keep it behind Presenter.
+5. DRM/KMS presenter on Linux when the framebuffer is too slow.
+6. Live web surfaces. Servo's --devtools server binds without a display, but it
+   speaks a length-prefixed protocol, not HTTP /json. Find the framing and the
+   domains before designing the frame pump.
+
+TRAPS
+-----
+- Do not put the presenter on the message loop's thread. A blocking write to a
+  TTY or framebuffer stalls every session.
+- The terminal presenter is two pixels per cell. Do not pretend it is readable
+  body text; design text-first apps for it, or use Sixel/Kitty where available.
+- A surface is zone C when it carries remote content. It does not get host API
+  authority because it is displayed.
+- Frame size and bandwidth are the first performance risk, not the compositor.
+- A failed presenter must fall back to the terminal presenter or the text
+  console; login must never depend on a GPU or a web renderer.
