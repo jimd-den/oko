@@ -70,11 +70,14 @@ pub(super) fn run_reply(
     command: &str,
 ) -> Result<String, String> {
     let pty = server.sessions.pty(id).ok_or("session not found")?.clone();
+    // Mark the row before writing: the shell may echo the command before this
+    // line is reached, and a mark taken after the write can already be below
+    // the answer (the test that caught this saw an empty slice).
+    let before_cursor = server.terminal.cursor_line(&pty).unwrap_or(0);
     server
         .terminal
         .write_input(&pty, format!("{}\n", command).as_bytes())
         .map_err(|e| format!("{:?}", e))?;
-    let before_cursor = server.terminal.cursor_line(&pty).unwrap_or(0);
     let output = server
         .terminal
         .read_output(&pty)

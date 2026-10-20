@@ -20,8 +20,10 @@ use std::time::{Duration, Instant};
 const QUIET: Duration = Duration::from_millis(400);
 
 /// The longest a read waits for anything at all. A session that says nothing
-/// still answers; it does not hold its caller.
-const SETTLE_CAP: Duration = Duration::from_millis(1500);
+/// still answers; it does not hold its caller. The first read of a fresh shell
+/// waits the whole cap, because a cold shell may not have drawn its prompt
+/// inside the quiet window (that race made a console test flaky).
+const SETTLE_CAP: Duration = Duration::from_millis(2000);
 
 const POLL: Duration = Duration::from_millis(10);
 
@@ -56,13 +58,35 @@ impl SessionEntry {
                 }
             }
         });
-        Self {
+        let mut entry = Self {
             master,
             writer,
             output,
             screen: Screen::new(cols, rows),
             child,
             last_exit: None,
+        };
+        entry.wait_for_first_draw();
+        entry
+    }
+
+    /// Wait, bounded, for the shell to draw its first prompt.
+    ///
+    /// A session that accepts input before the shell has started buffers that
+    /// input, so the first command's echo and answer can arrive in a different
+    /// order than a caller expects. Waiting here makes "session created" mean
+    /// "shell is ready to read", not merely "PTY is open".
+    fn wait_for_first_draw(&mut self) {
+        let deadline = Instant::now() + SETTLE_CAP;
+        while Instant::now() < deadline {
+            match self.take_output() {
+                Ok(bytes) if !bytes.is_empty() => {
+                    self.screen.feed(&bytes);
+                    return;
+                }
+                Ok(_) => std::thread::sleep(POLL),
+                Err(_) => return,
+            }
         }
     }
 
@@ -90,14 +114,19 @@ impl SessionEntry {
     pub(super) fn read_screen(&mut self) -> Result<String, PtyError> {
         let deadline = Instant::now() + SETTLE_CAP;
         let mut quiet_since = Instant::now();
+        let mut drew_something = false;
         loop {
             let bytes = self.take_output()?;
             if bytes.is_empty() {
-                if quiet_since.elapsed() >= QUIET {
+                // Quiet only means "finished" once the session has drawn at
+                // least once. A cold shell is silent while it starts, and that
+                // is not an empty answer.
+                if drew_something && quiet_since.elapsed() >= QUIET {
                     break;
                 }
             } else {
                 self.screen.feed(&bytes);
+                drew_something = true;
                 quiet_since = Instant::now();
             }
             if Instant::now() >= deadline {
