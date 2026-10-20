@@ -67,7 +67,6 @@ fn str(v: &str) -> crate::ipc::json::JsonValue {
 mod tests {
     use super::*;
     use crate::application::session_service::SessionService;
-    use crate::browser::adapters::blink_install::BlinkInstaller;
     use crate::browser::adapters::mock::MockBrowserEngineAdapter;
     use crate::browser::ports::engine::BrowserEnginePort;
     use crate::domain::capability::{Capability, CapabilityPolicy};
@@ -91,7 +90,6 @@ mod tests {
             SessionService::new(),
             policy,
             browser,
-            BlinkInstaller::new(&dir),
         )
         .with_ui_root(dir.clone());
         (core, dir)

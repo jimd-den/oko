@@ -19,6 +19,7 @@ mod download;
 mod extract;
 mod launch;
 mod lock;
+mod sha256;
 mod verify;
 
 #[cfg(test)]
@@ -38,10 +39,10 @@ pub const ENGINE_DIR: &str = "engines";
 /// The engine archive cache, `downloads/`.
 pub const DOWNLOADS_DIR: &str = "downloads";
 
-/// The binary file names upstream prebuilt archives place directly in the
-/// engine directory. A lookup table of real artifacts: Servo ships `servoshell`,
-/// Chromium ships `headless_shell`/`content_shell`/`chrome`.
-pub const BINARIES: &[&str] = &["servoshell", "headless_shell", "content_shell", "chrome"];
+/// The binary file name the pinned Servo archive places directly in the engine
+/// directory. Kept as a list because the lookup is engine-neutral, but only
+/// Servo is shipped.
+pub const BINARIES: &[&str] = &["servoshell"];
 
 /// `third_party/engines`.
 pub fn engines_root(workspace_root: &Path) -> PathBuf {

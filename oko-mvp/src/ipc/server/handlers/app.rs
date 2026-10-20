@@ -146,13 +146,11 @@ mod tests {
 
     fn test_server() -> Core {
         use crate::application::session_service::SessionService;
-        use crate::browser::adapters::blink_install::BlinkInstaller;
         use crate::browser::adapters::mock::MockBrowserEngineAdapter;
         use crate::browser::ports::engine::BrowserEnginePort;
         use crate::domain::capability::{Capability, CapabilityPolicy};
         use crate::ports::process::ProcessPort;
         use crate::ports::terminal::TerminalPort;
-        use std::env::temp_dir;
 
         let process: Box<dyn ProcessPort> =
             Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
@@ -161,8 +159,6 @@ mod tests {
         let sessions = SessionService::new();
         let policy = CapabilityPolicy::new().with(Capability::ProcessSpawn);
         let browser: Box<dyn BrowserEnginePort> = Box::new(MockBrowserEngineAdapter::new());
-        let root = temp_dir().join("oko-app-test");
-        let _ = std::fs::create_dir_all(root.join("toolchain"));
 
         Core::new(
             process,
@@ -170,7 +166,6 @@ mod tests {
             sessions,
             policy,
             browser,
-            BlinkInstaller::new(&root),
         )
     }
 

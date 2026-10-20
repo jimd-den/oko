@@ -6,57 +6,10 @@
 # DEP-001: No unpinned upstream revisions in release builds.
 # DEP-002: No silent dependency downloads during compilation (install is an
 # explicit terminal command, never a build-time download).
-
-[blink]
-component = "Blink"
-upstream_project = "Chromium"
-role = "Primary browser engine and desktop UI renderer"
-source_url = "https://chromium.googlesource.com/chromium/src.git"
-pinned_revision = "refs/heads/main@16abc2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9"
-source_checksum_sha256 = "PLACEHOLDER-PENDING-FIRST-FETCH"
-license = "BSD-style (Chromium)"
-build_configuration = "content_embedder"
-target_platforms = ["linux-x86-64"]
-transitive_dependency_inventory = ["V8", "Skia", "Blink", "libwebp", "libpng", "harfbuzz", "icu", "zlib"]
-security_advisory_tracking = "Chromium security bulletins + CVE monitoring"
-local_patches = []
-patch_rationale = "none"
-update_owner = "platform-team"
-rollback_procedure = "Revert versions.lock to previous revision; rebuild embedder"
-
-[v8]
-component = "V8"
-upstream_project = "V8"
-role = "JavaScript engine for Blink and desktop UI"
-source_url = "https://chromium.googlesource.com/v8/v8.git"
-pinned_revision = "11.5.143.11"
-source_checksum_sha256 = "PLACEHOLDER-PENDING-FIRST-FETCH"
-license = "BSD-style"
-build_configuration = "embedded"
-target_platforms = ["linux-x86-64"]
-transitive_dependency_inventory = ["V8", "icu", "zlib"]
-security_advisory_tracking = "V8 security advisories"
-local_patches = []
-patch_rationale = "none"
-update_owner = "platform-team"
-rollback_procedure = "Revert versions.lock"
-
-[skia]
-component = "Skia"
-upstream_project = "Skia"
-role = "2D graphics engine used by Blink; may be used by ỌKỌ native graphics"
-source_url = "https://skia.googlesource.com/skia.git"
-pinned_revision = "m115"
-source_checksum_sha256 = "PLACEHOLDER-PENDING-FIRST-FETCH"
-license = "BSD-style"
-build_configuration = "shared_library"
-target_platforms = ["linux-x86-64"]
-transitive_dependency_inventory = ["Skia", "libpng", "libjpeg", "webp", "icu"]
-security_advisory_tracking = "Skia security advisories"
-local_patches = []
-patch_rationale = "none"
-update_owner = "platform-team"
-rollback_procedure = "Revert versions.lock"
+#
+# Browser engines: Servo is the only one this project ships. There is no
+# Blink/V8/Skia entry because no Chromium stack is built or bundled; the
+# minimal production set is one engine per build (SRD ENG-001, DEP-012).
 
 # Graphics backends (enabled explicitly per target platform — DEP-007)
 [vulkan]
@@ -75,13 +28,15 @@ role = "Required Windows graphics backends"
 target_platforms = ["windows"]
 license = "MIT / MS-RL (Windows SDK)"
 
-# Prebuilt engine releases (SRD §2.1, §5.2). Servo publishes ready-to-run
+# Prebuilt engine release (SRD §2.1, §5.2). Servo publishes ready-to-run
 # archives, so the engine is fetched and unpacked rather than built from source:
-# the digest below is the published one for this exact asset.
+# the digest below is the published one for this exact asset. The adapter keeps
+# marking it experimental, because upstream calls it that, not because another
+# engine is hiding behind it.
 [servo]
 component = "Servo"
 upstream_project = "Servo"
-role = "Experimental alternative browser engine, and the engine this host can actually run"
+role = "The only browser engine this project ships, driven as a separate process"
 source_url = "https://github.com/servo/servo/releases/download/v0.7.0/servo-aarch64-linux-gnu.tar.gz"
 pinned_revision = "v0.7.0"
 source_checksum_sha256 = "034f66ec113fcf7ced0534cba2899b6bc578402309ad4bddb69e5803587f5513"

@@ -1,8 +1,8 @@
 //! BrowserEnginePort — the ỌKỌ browser interface (SRD §5.2).
 //!
-//! Hides engine-specific objects (Blink DOM types, V8 handles, Gecko
-//! internals, SpiderMonkey runtimes). Each backend is a separate adapter.
-//! Exactly one engine backend serves one browser instance (SRD ENG-001).
+//! Hides engine-specific objects (DOM types, script-engine handles, rendering
+//! state). Each backend is a separate adapter. Exactly one engine backend
+//! serves one browser instance (SRD ENG-001).
 
 use crate::domain::session::SessionId;
 

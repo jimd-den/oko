@@ -1,14 +1,15 @@
 //! Checksum verification for a downloaded engine archive.
 //!
-//! Reuses the crate's pure-Rust SHA-256 (`blink_install::sha256`) so the check
+//! Reuses the crate's pure-Rust SHA-256 (`engine_binary::sha256`) so the check
 //! stays offline and testable. A second digest would put two implementations
 //! of one algorithm in the tree to keep in sync.
 
-use crate::browser::adapters::blink_install::sha256::sha256;
+use super::sha256::sha256;
 use std::fs;
 use std::path::Path;
 
-/// The placeholder blink_install writes until a real digest has been recorded.
+/// The placeholder a pinned record carries until a real digest has been
+/// recorded.
 const UNSET_SENTINEL: &str = "PLACEHOLDER-PENDING-FIRST-FETCH";
 
 /// A pinned checksum that has not been filled in yet.

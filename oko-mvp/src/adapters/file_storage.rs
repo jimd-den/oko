@@ -53,28 +53,51 @@ impl StoragePort for FileStorageAdapter {
                 values.insert(key, val);
             }
         }
+        // One source of truth for defaults: a config file that omits a key must
+        // agree with a config file that is absent entirely (CFG-002, CFG-009).
+        let defaults = Config::default();
         Ok(Config {
             desktop: DesktopConfig {
-                mode: get(&values, "desktop.mode", "workspace"),
-                theme: get(&values, "desktop.theme", "dark"),
-                terminal_visible: parse_bool(&values, "desktop.terminal_visible", true),
+                mode: get(&values, "desktop.mode", &defaults.desktop.mode),
+                theme: get(&values, "desktop.theme", &defaults.desktop.theme),
+                terminal_visible: parse_bool(
+                    &values,
+                    "desktop.terminal_visible",
+                    defaults.desktop.terminal_visible,
+                ),
             },
             browser: BrowserConfig {
-                engine: get(&values, "browser.engine", "blink"),
-                profile: get(&values, "browser.profile", "default"),
+                engine: get(&values, "browser.engine", &defaults.browser.engine),
+                profile: get(&values, "browser.profile", &defaults.browser.profile),
                 downloads_require_confirmation: parse_bool(
                     &values,
                     "browser.downloads_require_confirmation",
-                    true,
+                    defaults.browser.downloads_require_confirmation,
                 ),
             },
             graphics: GraphicsConfig {
-                preferred_backend: get(&values, "graphics.preferred_backend", "automatic"),
-                software_fallback: parse_bool(&values, "graphics.software_fallback", true),
+                preferred_backend: get(
+                    &values,
+                    "graphics.preferred_backend",
+                    &defaults.graphics.preferred_backend,
+                ),
+                software_fallback: parse_bool(
+                    &values,
+                    "graphics.software_fallback",
+                    defaults.graphics.software_fallback,
+                ),
             },
             boot: BootConfig {
-                start_desktop: parse_bool(&values, "boot.start_desktop", true),
-                recovery_enabled: parse_bool(&values, "boot.recovery_enabled", true),
+                start_desktop: parse_bool(
+                    &values,
+                    "boot.start_desktop",
+                    defaults.boot.start_desktop,
+                ),
+                recovery_enabled: parse_bool(
+                    &values,
+                    "boot.recovery_enabled",
+                    defaults.boot.recovery_enabled,
+                ),
             },
         })
     }

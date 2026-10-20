@@ -11,6 +11,7 @@
 //!   - navigating a live session means restarting its process, because driving
 //!     a running Servo needs its DevTools protocol (a later step);
 //!   - `execute_script` reports failure for the same reason.
+//!
 //! What it does not fake: the process is real, it renders the real page, and
 //! its version is read from the binary rather than asserted.
 //!

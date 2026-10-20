@@ -8,7 +8,6 @@ fn root() -> std::path::PathBuf {
 
 fn server() -> (Core, std::path::PathBuf) {
     use crate::application::session_service::SessionService;
-    use crate::browser::adapters::blink_install::BlinkInstaller;
     use crate::browser::adapters::mock::MockBrowserEngineAdapter;
     use crate::browser::ports::engine::BrowserEnginePort;
     use crate::domain::capability::{Capability, CapabilityPolicy};
@@ -24,7 +23,7 @@ fn server() -> (Core, std::path::PathBuf) {
         .with(Capability::FilesystemRead)
         .with(Capability::FilesystemWrite);
     let browser: Box<dyn BrowserEnginePort> = Box::new(MockBrowserEngineAdapter::new());
-    let core = Core::new(process, terminal, sessions, policy, browser, BlinkInstaller::new(&dir))
+    let core = Core::new(process, terminal, sessions, policy, browser)
         .with_workspace_root(dir.clone());
     (core, dir)
 }

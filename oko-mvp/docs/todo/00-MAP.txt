@@ -21,11 +21,13 @@ network — the transport changes, the view does not.
 
 STATE OF THE WORLD RIGHT NOW
 ----------------------------
-  gate        make check  -> 161 tests ALL OK, budget OK, clippy -D warnings clean
+  gate        make check  -> 168 tests ALL OK, budget OK, clippy -D warnings clean
   console     systemd --user unit `oko-web`, active, 0.0.0.0:8099
               http://localhost:8099/apps/computer.html
   engine      servo 0.7.0-aac43a3f3, state ready, binary at
               third_party/engines/servo/servoshell (installed, digest verified)
+              Servo is the ONLY engine in the build; Blink scaffolding removed
+              (docs/adr/0004). `mock` is a dev stub, never a fallback.
   terminal    REAL PTY (portable-pty), shell's own exit status, resize
   not real    the VT grid (alacritty_terminal is a dependency, unwired), so
               read_output returns raw bytes: echo, prompt, control sequences
@@ -55,7 +57,7 @@ ISSUES
 
 HOW TO RUN AND CHECK THINGS
 ---------------------------
-  build with the engine:  cargo build --offline --jobs 2 --features servo
+  build:                   cargo build --offline --jobs 2
   the gate:               make check          (budget + typecheck + clippy + tests)
   the console:            systemctl --user restart oko-web
                           curl -sS -o /dev/null -w '%{http_code}\n' \

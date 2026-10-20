@@ -136,7 +136,7 @@ fn execute_ui_mode_and_browser_engine() {
     });
     svc.register("browser engine", |_cmd, _ctx| {
         Ok(oko_core::domain::command::CommandResult::Ok(
-            "primary: blink/v8/skia".into(),
+            "primary: servo".into(),
         ))
     });
     let process = LinuxProcessAdapter::new();
@@ -150,6 +150,6 @@ fn execute_ui_mode_and_browser_engine() {
     );
     assert_eq!(
         svc.execute("browser engine", &mut ctx).message(),
-        "primary: blink/v8/skia"
+        "primary: servo"
     );
 }

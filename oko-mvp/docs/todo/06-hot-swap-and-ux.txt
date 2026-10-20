@@ -8,7 +8,7 @@ WHAT ALREADY WORKS
     build step, no bundler, no compile. Editing a file and reloading the page IS
     the hot-swap. That property is real and should not be lost.
   - Restarting the host picks up Rust changes:
-        cargo build --offline --jobs 2 --features servo
+        cargo build --offline --jobs 2
         systemctl --user restart oko-web
   - The owner asked for exactly this: "restart the server with the updates".
 

@@ -27,9 +27,7 @@ pub fn required_for(route: &str) -> Vec<Capability> {
         // Opening a web pane is a navigation, so it needs the navigation
         // capability even though the host's own engine is not involved.
         "ui.pane.open" => vec![Capability::BrowserNavigate],
-        "blink.install" | "blink.fetch-checksum" | "ui.mode.desktop" => {
-            vec![Capability::SystemConfigure]
-        }
+        "ui.mode.desktop" => vec![Capability::SystemConfigure],
         "render.demo" | "render.stats" | "render.capture" => vec![Capability::GraphicsCreate],
         _ => vec![],
     }
@@ -59,9 +57,9 @@ mod tests {
     }
 
     #[test]
-    fn installing_an_engine_needs_system_configure() {
+    fn changing_the_display_mode_needs_system_configure() {
         assert_eq!(
-            required_for("blink.install"),
+            required_for("ui.mode.desktop"),
             vec![Capability::SystemConfigure]
         );
     }

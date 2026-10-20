@@ -19,9 +19,6 @@ pub enum HostApiRequest {
     SystemStatus,
     BrowserOpen { url: String },
     ConfigRead,
-    BlinkInstall,
-    BlinkStatus,
-    BlinkFetchChecksum { path: String },
     UiModeDesktop,
     RenderDemo,
     RenderStats,
@@ -60,15 +57,6 @@ pub enum HostApiResponse {
         engine: String,
         terminal_visible: bool,
     },
-    BlinkInstalled {
-        state: String,
-    },
-    BlinkStatus {
-        state: String,
-    },
-    BlinkChecksum {
-        digest: String,
-    },
     UiMode {
         mode: String,
     },
@@ -102,10 +90,7 @@ pub fn capabilities_required(req: &HostApiRequest) -> Vec<Capability> {
         HostApiRequest::SystemStatus => vec![],
         HostApiRequest::BrowserOpen { .. } => vec![Capability::BrowserNavigate],
         HostApiRequest::ConfigRead => vec![],
-        // Sensitive system operations: install software, change UI mode, render.
-        HostApiRequest::BlinkInstall => vec![Capability::SystemConfigure],
-        HostApiRequest::BlinkStatus => vec![],
-        HostApiRequest::BlinkFetchChecksum { .. } => vec![Capability::SystemConfigure],
+        // Sensitive system operations: change UI mode and render.
         HostApiRequest::UiModeDesktop => vec![Capability::SystemConfigure],
         HostApiRequest::RenderDemo => vec![Capability::GraphicsCreate],
         HostApiRequest::RenderStats => vec![Capability::GraphicsCreate],

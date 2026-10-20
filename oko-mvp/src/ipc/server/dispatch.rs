@@ -6,7 +6,7 @@ use crate::ipc::message::{Direction, Message, IPC_VERSION};
 use crate::ipc::server::Core;
 
 use crate::ipc::server::capabilities;
-use crate::ipc::server::handlers::{app, app_new, blink, browser, computer, fs, render, status, terminal, ui};
+use crate::ipc::server::handlers::{app, app_new, browser, computer, fs, render, status, terminal, ui};
 
 pub fn handle_message(core: &mut Core, msg: &Message) -> Message {
     if msg.version != IPC_VERSION {
@@ -52,9 +52,6 @@ fn dispatch_request(core: &mut Core, msg: &Message) -> Result<crate::ipc::json::
         "host.browser.open" => browser::handle_open(core, &msg.payload),
         "host.browser.engine" => browser::handle_engine(core),
         "host.browser.capabilities" => browser::handle_capabilities(core),
-        "blink.install" => blink::handle_install(core),
-        "blink.status" => blink::handle_status(core),
-        "blink.fetch-checksum" => blink::handle_fetch_checksum(core, &msg.payload),
         "ui.mode.desktop" => ui::handle_desktop(core),
         "ui.pane.open" => ui::handle_pane_open(core, &msg.payload),
         "render.demo" => render::handle_demo(core, &msg.payload),

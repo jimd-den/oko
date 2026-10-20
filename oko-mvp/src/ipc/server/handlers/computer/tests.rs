@@ -3,7 +3,7 @@
 
 use super::*;
 use crate::application::session_service::SessionService;
-use crate::browser::adapters::{blink_install::BlinkInstaller, mock::MockBrowserEngineAdapter};
+use crate::browser::adapters::mock::MockBrowserEngineAdapter;
 use crate::domain::capability::{Capability, CapabilityPolicy};
 use crate::ipc::json;
 use crate::ports::process::ProcessPort;
@@ -14,15 +14,12 @@ fn core() -> Core {
         Box::new(crate::adapters::linux_process::LinuxProcessAdapter::new());
     let terminal: Box<dyn TerminalPort> =
         Box::new(crate::adapters::portable_pty::PortablePtyAdapter::new());
-    let root = std::env::temp_dir().join("oko-computer-test");
-    let _ = std::fs::create_dir_all(root.join("toolchain"));
     Core::new(
         process,
         terminal,
         SessionService::new(),
         CapabilityPolicy::new().with(Capability::TerminalCreate),
         Box::new(MockBrowserEngineAdapter::new()),
-        BlinkInstaller::new(&root),
     )
 }
 

@@ -1,8 +1,8 @@
 //! Pure-Rust SHA-256 digest (FIPS 180-4), no external crates.
 //!
-//! Exists so `blink install` can verify the Chromium source archive against
-//! the checksum pinned in `toolchain/versions.lock` offline. Changes with the
-//! digest algorithm, not with the install flow that consumes it.
+//! Exists so the engine install flow can verify a downloaded release archive
+//! against the checksum pinned in `toolchain/versions.lock`, offline. Changes
+//! with the digest algorithm, not with the flow that consumes it.
 
 /// SHA-256 digest as 32 bytes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

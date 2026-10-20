@@ -150,5 +150,5 @@ fn start(
     url: Option<&str>,
 ) -> Result<engine_binary::EngineProcess, BrowserError> {
     let target = url.unwrap_or("about:blank");
-    engine_binary::spawn_session(binary, target).map_err(|e| BrowserError::SessionCreateFailed(e))
+    engine_binary::spawn_session(binary, target).map_err(BrowserError::SessionCreateFailed)
 }

@@ -50,15 +50,6 @@ fn validate_status_needs_no_capability() {
 }
 
 #[test]
-fn validate_blink_install_requires_system_configure() {
-    let policy = CapabilityPolicy::new().with(Capability::SystemConfigure);
-    assert!(validate_request(&HostApiRequest::BlinkInstall, &policy).is_ok());
-
-    let empty = CapabilityPolicy::new();
-    assert!(validate_request(&HostApiRequest::BlinkInstall, &empty).is_err());
-}
-
-#[test]
 fn validate_ui_mode_desktop_requires_system_configure() {
     let policy = CapabilityPolicy::new().with(Capability::SystemConfigure);
     assert!(validate_request(&HostApiRequest::UiModeDesktop, &policy).is_ok());
@@ -74,10 +65,4 @@ fn validate_render_demo_requires_graphics_create() {
 
     let empty = CapabilityPolicy::new();
     assert!(validate_request(&HostApiRequest::RenderDemo, &empty).is_err());
-}
-
-#[test]
-fn validate_blink_status_needs_no_capability() {
-    let empty = CapabilityPolicy::new();
-    assert!(validate_request(&HostApiRequest::BlinkStatus, &empty).is_ok());
 }

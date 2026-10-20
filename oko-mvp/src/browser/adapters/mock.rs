@@ -1,9 +1,8 @@
 //! MockBrowserEngineAdapter — dev/stub browser engine (SRD §5.2).
 //!
-//! Simulates a browser engine behind `BrowserEnginePort`. Engine-neutral:
-//! no Blink DOM types or V8 objects leak through. This adapter can be swapped
-//! for a supported Chromium embedding (Blink/V8/Skia) in slice 2 production
-//! builds without touching domain or application code.
+//! Simulates a browser engine behind `BrowserEnginePort`. Engine-neutral: no
+//! engine objects leak through. This adapter is a dev stub, not a production
+//! fallback; Servo is the engine the host actually serves.
 
 use crate::browser::ports::engine::{
     BackendCapabilities, BrowserConfig, BrowserEnginePort, BrowserError, BrowserSession,

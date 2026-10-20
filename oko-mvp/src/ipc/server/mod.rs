@@ -1,14 +1,12 @@
 //! The host core, and the stdio server that drives it.
 //!
 //! `Core` is everything the host can do, with no opinion about how a message
-//! arrives: process adapter, terminal adapter, sessions, capability policy,
-//! browser engine and the Blink installer. `IpcServer` drives it over a
-//! transport; `crate::ipc::http` drives the same core over loopback HTTP for the
-//! desktop UI. One core, more than one transport, the same typed and versioned
-//! messages (SRD §4.2).
+//! arrives: process adapter, terminal adapter, sessions, capability policy and
+//! browser engine. `IpcServer` drives it over a transport; `crate::ipc::http`
+//! drives the same core over loopback HTTP for the desktop UI. One core, more
+//! than one transport, the same typed and versioned messages (SRD §4.2).
 
 use crate::application::session_service::SessionService;
-use crate::browser::adapters::blink_install::BlinkInstaller;
 use crate::browser::ports::engine::BrowserEnginePort;
 use crate::domain::capability::CapabilityPolicy;
 use crate::ipc::transport::{IpcTransport, MessageBus};
@@ -25,7 +23,6 @@ pub struct Core {
     sessions: SessionService,
     policy: CapabilityPolicy,
     browser: Box<dyn BrowserEnginePort>,
-    blink_installer: BlinkInstaller,
     desktop_mode: bool,
     /// Why the browser engine is unusable, if it failed to initialize.
     /// `None` means it initialized. The engine is an optional service, so this
@@ -44,7 +41,6 @@ impl Core {
         sessions: SessionService,
         policy: CapabilityPolicy,
         browser: Box<dyn BrowserEnginePort>,
-        blink_installer: BlinkInstaller,
     ) -> Self {
         Self {
             process,
@@ -52,7 +48,6 @@ impl Core {
             sessions,
             policy,
             browser,
-            blink_installer,
             desktop_mode: false,
             engine_unavailable: None,
             workspace_root: std::env::current_dir().unwrap_or_else(|_| ".".into()),

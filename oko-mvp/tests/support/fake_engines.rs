@@ -9,7 +9,6 @@
 use super::scripted_transport::ScriptedTransport;
 use oko_core::adapters::{linux_process::LinuxProcessAdapter, portable_pty::PortablePtyAdapter};
 use oko_core::application::session_service::SessionService;
-use oko_core::browser::adapters::blink_install::BlinkInstaller;
 use oko_core::browser::ports::engine::{
     BackendCapabilities, BrowserConfig, BrowserEnginePort, BrowserError, BrowserSession,
 };
@@ -17,7 +16,6 @@ use oko_core::domain::capability::{Capability, CapabilityPolicy};
 use oko_core::ipc::message::Message;
 use oko_core::ipc::server::{Core, IpcServer};
 use oko_core::ipc::transport::MessageBus;
-use std::path::PathBuf;
 
 const UNLINKED: &str = "embedder not linked";
 const CRASHED: &str = "renderer process terminated";
@@ -136,7 +134,6 @@ pub fn run_host_with_policy(
         SessionService::new(),
         policy,
         engine,
-        BlinkInstaller::new(&PathBuf::from("/nonexistent-oko-workspace")),
     );
     let mut server = IpcServer::new(bus, core);
     let result = server.run();

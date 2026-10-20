@@ -6,7 +6,7 @@
 use super::*;
 use crate::adapters::{linux_process::LinuxProcessAdapter, portable_pty::PortablePtyAdapter};
 use crate::application::session_service::SessionService;
-use crate::browser::adapters::{blink_install::BlinkInstaller, mock::MockBrowserEngineAdapter};
+use crate::browser::adapters::mock::MockBrowserEngineAdapter;
 use crate::domain::capability::{Capability, CapabilityPolicy};
 use crate::ipc::json::{self, object};
 use crate::ipc::message::Message;
@@ -24,7 +24,6 @@ fn server() -> HttpUiServer {
             .with(Capability::TerminalCreate)
             .with(Capability::BrowserNavigate),
         Box::new(MockBrowserEngineAdapter::new()),
-        BlinkInstaller::new(&std::env::temp_dir().join("oko-http-test")),
     );
     let ui_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("ui");
     HttpUiServer::bind(core, &ui_root, 0).expect("bind loopback")

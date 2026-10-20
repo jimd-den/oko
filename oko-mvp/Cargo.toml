@@ -3,27 +3,15 @@ name = "oko-core"
 version = "0.2.0"
 edition = "2021"
 
-# Slice 1 MVP: headless core + terminal. Zero external dependencies so the
-# core builds and tests offline (SRD AT-001, AT-019). Platform adapters use
-# std only; a real PTY/nix integration is a later adapter swap behind the
-# same port trait.
+# ỌKỌ core and host. The dependency policy is an allowlist, not a ban: the
+# terminal core and PTY are the only Cargo dependencies, and Servo is a
+# prebuilt engine process rather than a linked library. Everything else is
+# std, so the core still builds and tests offline (SRD §2, AT-019).
 #
-# Slice 2: web-based desktop. Adds the Blink/V8/Skia browser engine adapter
-# behind the `blink` feature flag. Per SRD §2.1 / §5.1, Blink is NOT embedded
-# as a standalone library; it is provided through a supported Chromium
-# embedding arrangement. The Chromium source tree must be built separately
-# (approved upstream build process, pinned revision, verified checksum) and
-# linked via the adapter's embedder-interface declarations below.
-#
-# Default (no features): the core builds offline with zero external crates and
-# can serve the `mock` dev engine. Which engine serves is chosen by name at
-# startup (`--engine <name>`, else the profile's `[browser] engine`); a name
-# this build does not contain is reported as unavailable rather than replaced
-# by another engine (SRD ENG-002, ENG-008).
-# --features blink:  includes the blink adapter declarations (still requires
-#                    a separately built Chromium embedder to link).
-# --features servo:  includes the servo adapter declarations (still requires
-#                    a separately built Servo checkout to link).
+# Servo is the only browser engine this project ships. It is located under
+# `third_party/engines/servo/` and started as its own process; a missing
+# binary is reported as unavailable, never replaced by another engine
+# (SRD ENG-001, ENG-002, ENG-008). `mock` is a dev stub for tests only.
 
 [[bin]]
 name = "oko-host"
@@ -39,11 +27,6 @@ path = "src/main.rs"
 alacritty_terminal = "0.26"
 # wezterm's PTY crate: the real adapter behind TerminalPort.
 portable-pty = "0.8"
-
-[features]
-default = []
-blink = []
-servo = []
 
 [dev-dependencies]
 

@@ -46,10 +46,10 @@ impl Default for Config {
                 terminal_visible: true,
             },
             browser: BrowserConfig {
-                // Servo is the engine this project supports: it ships prebuilt
-                // release archives, so it can actually be installed and run.
-                // Blink stays a declared backend until a Chromium embedder can
-                // be built for a supported platform (SRD §5.2, §14.3).
+                // Servo is the only browser engine this project ships. It is a
+                // prebuilt release driven as its own process, so a machine
+                // without the binary still starts the core and reports the
+                // engine unavailable rather than substituting another one.
                 engine: "servo".into(),
                 profile: "default".into(),
                 downloads_require_confirmation: true,

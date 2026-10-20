@@ -2,7 +2,7 @@
 //!
 //! A dependency-free software renderer that produces a PPM image. Used as the
 //! graphics fallback when no GPU backend is available, and to render the
-//! `render demo` output without Blink/Vulkan/Direct3D.
+//! `render demo` output without a browser or GPU backend.
 
 /// RGBA color.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

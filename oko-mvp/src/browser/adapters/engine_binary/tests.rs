@@ -49,8 +49,8 @@ fn ignores_the_other_sections() {
     let tmp = workspace("other-sections");
     let lock = write_lock(
         &tmp,
-        "[blink]\n\
-         source_url = \"https://example.com/chromium.tar.xz\"\n\
+        "[other_engine]\n\
+         source_url = \"https://example.com/other.tar.xz\"\n\
          source_checksum_sha256 = \"ffff\"\n\
          archive_kind = \"tar.xz\"\n\
          \n\
@@ -106,7 +106,7 @@ fn a_known_digest_verifies_and_a_wrong_one_does_not() {
     let tmp = workspace("verify");
     let file = tmp.join("archive.bin");
     fs::write(&file, b"hello world").unwrap();
-    // SHA-256("hello world"), the same vector blink_install pins.
+    // SHA-256("hello world"), the same vector the digest module pins.
     let digest = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9";
 
     assert!(verify::verify(&file, digest).is_ok());
