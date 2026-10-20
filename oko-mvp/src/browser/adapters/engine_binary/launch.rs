@@ -63,6 +63,31 @@ impl EngineProcess {
         })
     }
 
+    /// Wait, bounded, then stop the engine.
+    ///
+    /// Contract: a timed-out engine is killed and reaped, so a caller never
+    /// leaks a process. The error names the timeout, not a signal.
+    pub fn wait_for_exit_timeout(
+        &mut self,
+        timeout: std::time::Duration,
+    ) -> Result<EngineExit, String> {
+        let deadline = std::time::Instant::now() + timeout;
+        loop {
+            if let Some(status) = self.child.try_wait().map_err(|e| format!("wait: {}", e))? {
+                return Ok(EngineExit {
+                    code: status.code(),
+                    signal: exit_signal(&status),
+                });
+            }
+            if std::time::Instant::now() >= deadline {
+                let _ = self.child.kill();
+                let _ = self.child.wait();
+                return Err(format!("engine did not finish within {:?}", timeout));
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+    }
+
     /// Stop the engine, then reap it so no zombie is left behind.
     pub fn stop(&mut self) -> Result<(), String> {
         let _ = self.child.kill();
@@ -71,11 +96,16 @@ impl EngineProcess {
     }
 }
 
-/// argv for a headless render: `-z -o <png> --screen-size <WxH> <url>`.
+/// argv for a headless render: `-z -x -o <png> --screen-size <WxH> <url>`.
+///
+/// `-x` makes the render exit after the page loads. Without it the process
+/// stays alive, which is correct for a windowed session and wrong for a
+/// one-shot frame.
 pub fn render_argv(binary: &Path, job: &RenderJob) -> Vec<String> {
     vec![
         binary.to_string_lossy().to_string(),
         "-z".into(),
+        "-x".into(),
         "-o".into(),
         job.output.to_string_lossy().to_string(),
         format!("--screen-size={}", job.screen_size),

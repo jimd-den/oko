@@ -9,11 +9,13 @@
 //! they share, so the same app can be shown on a TTY, a framebuffer, or a
 //! browser canvas without changing the app.
 
+pub mod bmp;
 pub mod compositor;
 pub mod presenter;
 pub mod surface;
 pub mod terminal;
 
+pub use bmp::{decode_bmp, BmpError};
 pub use compositor::Compositor;
 pub use presenter::{HeadlessPresenter, OutputSize, Presenter, PresenterError};
 pub use surface::{Frame, Surface, SurfaceId};

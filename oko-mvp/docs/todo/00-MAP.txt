@@ -28,6 +28,9 @@ STATE OF THE WORLD RIGHT NOW
               TerminalPresenter (truecolor ANSI half blocks). Pure, no deps,
               no device. ADR 0005. Servo renders offscreen with no DISPLAY:
               measured ~1 s for 320x200, llvmpipe; first cold run can hang.
+  preview     `oko-preview <url> [cols] [rows]`: Servo -> BMP -> Frame ->
+              ANSI on the current TTY. Works with no DISPLAY/WAYLAND.
+              Hazard: `ulimit -v` makes Servo exit 101; use a timeout.
   console     systemd --user unit `oko-web`, active, 0.0.0.0:8099
               http://localhost:8099/apps/computer.html
   engine      servo 0.7.0-aac43a3f3, state ready, binary at

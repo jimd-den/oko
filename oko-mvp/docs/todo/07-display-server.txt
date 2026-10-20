@@ -17,6 +17,14 @@ and WAYLAND_DISPLAY unset, through Mesa llvmpipe, in about a second. The first
 cold run hung; repeat runs are reliable. A 320x200 BMP converted to 80x24 ANSI
 half blocks showed the page and its orange heading.
 
+WHAT WORKS NOW
+--------------
+  oko-preview <url> [cols] [rows]
+      Servo -> BMP -> Frame -> TerminalPresenter on the current TTY.
+      Verified with DISPLAY and WAYLAND_DISPLAY unset, 40x12 cells.
+      Hazard: do NOT run it under `ulimit -v`; Servo reserves address space and
+      exits 101. Use a timeout, not an address-space cap, for the engine child.
+
 WHAT IS MISSING, IN ORDER
 -------------------------
 1. A surface protocol. An app process connects to the host, creates a surface,

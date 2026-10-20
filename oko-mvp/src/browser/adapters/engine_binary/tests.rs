@@ -145,9 +145,26 @@ fn the_render_argv_is_the_headless_shape_servo_accepts() {
 
     assert_eq!(argv[0], "/engines/servo/servoshell");
     assert!(argv.contains(&"-z".to_string()), "headless flag");
+    assert!(argv.contains(&"-x".to_string()), "exit flag");
     assert!(argv.contains(&"/tmp/shot.png".to_string()), "output path");
     assert!(argv.contains(&"--screen-size=1280x800".to_string()));
     assert_eq!(argv.last().unwrap(), "http://127.0.0.1:8099/");
+}
+
+#[test]
+fn a_render_that_never_finishes_is_stopped_by_the_timeout() {
+    let tmp = workspace("timeout");
+    let binary = tmp.join("servoshell");
+    fs::write(&binary, "#!/bin/sh\nsleep 5\n").unwrap();
+    use std::os::unix::fs::PermissionsExt;
+    let mut perms = fs::metadata(&binary).unwrap().permissions();
+    perms.set_mode(0o755);
+    fs::set_permissions(&binary, perms).unwrap();
+
+    let job = launch::RenderJob::new("about:blank", &tmp.join("out.bmp"), "8x8");
+    let mut process = launch::spawn_render(&binary, &job).unwrap();
+    let result = process.wait_for_exit_timeout(std::time::Duration::from_millis(50));
+    assert!(result.is_err(), "the fake engine should not finish");
 }
 
 #[test]
