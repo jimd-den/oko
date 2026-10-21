@@ -61,12 +61,26 @@ container.
 - The crate graph and all dependencies downloaded successfully. The blocker is
   compiling `stylo`, not resolving or fetching.
 
+## CI result
+
+The manual `servo-spike` workflow ran on `ubuntu-24.04` (run 39528319441). The
+**full Servo graph compiled**: `servo v0.7.0` and its dependencies built in
+about 14 minutes. The only failures were three error-conversion mistakes in the
+spike itself:
+
+- `surfman::Error` does not implement `std::error::Error`;
+- `make_current` needs the `RenderingContext` trait in scope;
+- `ScreenshotCaptureError` does not implement `std::error::Error`.
+
+Those are fixed. This confirms the build is feasible on a normal runner and the
+2.7 GB development container is the outlier, not the crate.
+
 ## Conclusion
 
-The API is viable. The host is not. Building the embedder needs a machine with
-enough RAM for `stylo` and the Servo link — budget at least 8 GB, measure on
-the actual build host. The default ỌKỌ build must not depend on this crate; the
-embedder is a separate process and a separate build (ADR 0009).
+The API is viable, and a normal CI runner can build it. This container cannot
+compile `stylo` under 2.4 GB; use the workflow or a host with at least 8 GB.
+The default ỌKỌ build must not depend on this crate; the embedder is a separate
+process and a separate build (ADR 0009).
 
 The next step is to run `spikes/servo-embed` on that larger host. If it writes a
 frame with no `DISPLAY`/`WAYLAND_DISPLAY`, the embedder can be wired to

@@ -1,8 +1,8 @@
 TASK 8 — A live Servo embedder as a separate process
 =====================================================
-Status: API VALIDATED, HOST BUILD BLOCKED. Design: docs/adr/0009.
-Spike: spikes/servo-embed. The 2.7 GB container aborts in stylo under 2.4 GB;
-build on a host with at least 8 GB and measure.
+Status: API VALIDATED, CI BUILD PROVEN, FRAME RENDER PENDING. Design:
+docs/adr/0009. Spike: spikes/servo-embed. The full Servo graph compiles on an
+ubuntu-24.04 runner; the 2.7 GB container aborts in stylo under 2.4 GB.
 
 WHAT IS CERTAIN
 ---------------
