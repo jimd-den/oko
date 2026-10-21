@@ -69,12 +69,13 @@ ORDER (dependencies are real, not preferences)
                                   getTarget and evaluateJS work, but the prebuilt
                                   devtools has no frame sink. One-shot snapshots
                                   work.
-  1b. 08-servo-embedder.txt       THE LIVE-WEB PATH. The published servo 0.7.0
-                                  crate has SoftwareRenderingContext and
-                                  take_screenshot/read_to_image. It must be a
-                                  separate process. API validated; this host
-                                  aborts in stylo under 2.4 GB, so the spike
-                                  needs a larger build host.
+  1b. 08-servo-embedder.txt       THE LIVE-WEB PATH. FRAME PROVEN on CI: the
+                                  published servo 0.7.0 crate rendered a
+                                  320x200 page with SoftwareRenderingContext,
+                                  no display server. Next: the separate
+                                  oko-servo-embed surface client. This host
+                                  still aborts in stylo under 2.4 GB; CI has
+                                  the build cache.
   2. 03-terminal-grid.txt         small, self-contained, finishes #5, visible win
   3. 02-surface-frame-streaming.txt   needs 1. Also lands #1 (DRM) on real hardware
   4. 05-star-trek-console.txt     needs 2 and 3

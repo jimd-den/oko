@@ -84,6 +84,19 @@ The workflow now installs `libegl1`, `libegl-dev`, `libgles2` and
 `libgl1-mesa-dri`, sets `EGL_PLATFORM=surfaceless`, and forces llvmpipe. This is
 a runtime dependency of the software context, not an API error.
 
+Run 39534466135 then rendered the frame successfully:
+
+    wrote 320x200 frame to frame.ppm
+
+The frame has 657 unique colors, a #101828 background and #ff9c00 text. The
+rendered image is committed at `docs/reports/servo-crate-frame.png`.
+
+Why the first paint was white: painting before the document reached
+`LoadStatus::Complete` reads the default white framebuffer. The delegate now
+drives `WebView::paint()` on `notify_new_frame_ready`, and the first frame is
+taken with `take_screenshot`, which waits for load and layout. That combination
+works; `take_screenshot` with an empty delegate times out.
+
 ## Conclusion
 
 The API is viable, and a normal CI runner can build it. This container cannot
