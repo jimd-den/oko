@@ -1,7 +1,6 @@
 //! Argument parsing for oko-preview.
 
 use super::*;
-use super::*;
 
 fn args(list: &[&str]) -> Vec<String> {
     list.iter().map(|s| s.to_string()).collect()
