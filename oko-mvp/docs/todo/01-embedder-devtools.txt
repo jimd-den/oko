@@ -1,7 +1,8 @@
 TASK 1 — Drive Servo instead of restarting it (the hinge)
 =========================================================
-Status: NOT STARTED.  This unblocks the vision. Everything else is decoration
-until it lands.
+Status: RESEARCH DONE, PARTIAL. The transport and control path work; no frame
+sink exists in the prebuilt devtools. See docs/reports/servo-devtools-spike.md.
+A live web surface needs a custom embedder, not a client for this devtools.
 
 WHY
 ---
@@ -18,8 +19,14 @@ WHAT WE KNOW FOR CERTAIN (checked, not assumed)
 -----------------------------------------------
   - servoshell accepts --devtools=<addr:port>: `servoshell --help` prints
     "--devtools=<127.0.0.1:7000>  Start remote devtools server on port".
-  - Servo speaks the Chrome DevTools Protocol (CDP), which is JSON messages over
-    a WebSocket.
+  - Servo speaks the Firefox Remote Debugging Protocol (RDP), not CDP over a
+    WebSocket: a decimal length, a colon, then JSON (`195:{...}`). Verified by
+    hand against the installed binary.
+  - `listTabs`, `getTarget`, `getWatcher` and `ConsoleActor.evaluateJS` work;
+    `location.href = ...` navigates a live session.
+  - There is no screenshot/capture/snapshot method on the browsing context
+    actor, and `-o` writes one BMP at startup only. The prebuilt devtools
+    cannot provide frames.
   - The binary is installed and runs here: version Servo 0.7.0-aac43a3f3.
 
 UNVERIFIED — FIND OUT FIRST, BEFORE WRITING ANYTHING

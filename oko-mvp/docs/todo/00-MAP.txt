@@ -65,7 +65,10 @@ ORDER (dependencies are real, not preferences)
   0b. getty/session               text path landed (ADR 0006): oko-getty ->
                                   login -> oko-session. Themed PAM login stays
                                   ADR 0002, later.
-  1. 01-embedder-devtools.txt     THE HINGE for live web surfaces.
+  1. 01-embedder-devtools.txt     RESEARCHED: RDP over <len>:<json>; listTabs,
+                                  getTarget and evaluateJS work, but the prebuilt
+                                  devtools has no frame sink. Live web needs a
+                                  custom embedder; one-shot snapshots work.
   2. 03-terminal-grid.txt         small, self-contained, finishes #5, visible win
   3. 02-surface-frame-streaming.txt   needs 1. Also lands #1 (DRM) on real hardware
   4. 05-star-trek-console.txt     needs 2 and 3
