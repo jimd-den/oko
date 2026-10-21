@@ -6,7 +6,7 @@
 
 use oko_core::display::presenter::HeadlessPresenter;
 use oko_core::display::protocol::{ClientMessage, InputEvent, ServerMessage};
-use oko_core::display::server::serve_stream_with_input;
+use oko_core::display::server::{serve_stream_with_input, InputPolicy, ServeEnd};
 use oko_core::display::session::DisplaySession;
 use oko_core::display::surface::SurfaceId;
 use oko_core::display::wire::{read_server, write_client};
@@ -19,7 +19,7 @@ fn a_key_reaches_the_focused_surface() {
     let (input_tx, input_rx) = channel();
     let server = std::thread::spawn(move || {
         let mut session = DisplaySession::new(1, 1, HeadlessPresenter::new(1, 1));
-        serve_stream_with_input(server_side, &mut session, &input_rx)
+        serve_stream_with_input(server_side, &mut session, &input_rx, &InputPolicy::default())
     });
 
     let mut reader = client.try_clone().unwrap();
@@ -61,5 +61,41 @@ fn a_key_reaches_the_focused_surface() {
 
     drop(client);
     drop(reader);
-    server.join().unwrap().unwrap();
+    assert_eq!(server.join().unwrap().unwrap(), ServeEnd::Disconnected);
+}
+
+#[test]
+fn the_escape_key_stops_the_server_before_routing() {
+    let (server_side, mut client) = UnixStream::pair().unwrap();
+    let (input_tx, input_rx) = channel();
+    let server = std::thread::spawn(move || {
+        let mut session = DisplaySession::new(1, 1, HeadlessPresenter::new(1, 1));
+        serve_stream_with_input(server_side, &mut session, &input_rx, &InputPolicy::default())
+    });
+
+    let mut reader = client.try_clone().unwrap();
+    write_client(
+        &mut client,
+        &ClientMessage::Create {
+            id: SurfaceId(1),
+            width: 1,
+            height: 1,
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        read_server(&mut reader).unwrap(),
+        Some(ServerMessage::Created { id: SurfaceId(1) })
+    );
+
+    input_tx
+        .send(InputEvent::Key {
+            code: 0x1d,
+            pressed: true,
+        })
+        .unwrap();
+
+    assert_eq!(server.join().unwrap().unwrap(), ServeEnd::Quit);
+    drop(client);
+    drop(reader);
 }

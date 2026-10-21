@@ -19,6 +19,7 @@ pub mod fbdev;
 pub mod presenter;
 pub mod protocol;
 pub mod server;
+pub mod server_input;
 pub mod session;
 pub mod surface;
 mod terminal_input;

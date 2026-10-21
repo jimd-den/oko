@@ -8,7 +8,7 @@
 //! time, no input pump yet, and a terminal presenter. The surface contract is
 //! the same one a framebuffer or browser-canvas presenter will serve.
 
-use oko_core::display::server::{serve_unix, serve_unix_with_input};
+use oko_core::display::server::{serve_unix, serve_unix_with_input, InputPolicy};
 use oko_core::display::session::DisplaySession;
 use oko_core::display::terminal::TerminalPresenter;
 use oko_core::display::TerminalInput;
@@ -46,7 +46,7 @@ fn run(options: &Options) -> Result<(), String> {
     let mut session = DisplaySession::new(options.width, options.height, presenter);
     let input = TerminalInput::spawn().ok();
     eprintln!(
-        "oko-display: {} ({}x{}, {}x{} cells), input {}",
+        "oko-display: {} ({}x{}, {}x{} cells), input {}, Ctrl-] to leave",
         options.socket.display(),
         options.width,
         options.height,
@@ -55,7 +55,12 @@ fn run(options: &Options) -> Result<(), String> {
         if input.is_some() { "raw tty" } else { "unavailable" }
     );
     match &input {
-        Some(input) => serve_unix_with_input(&options.socket, &mut session, input.receiver()),
+        Some(input) => serve_unix_with_input(
+            &options.socket,
+            &mut session,
+            input.receiver(),
+            &InputPolicy::default(),
+        ),
         None => serve_unix(&options.socket, &mut session),
     }
 }

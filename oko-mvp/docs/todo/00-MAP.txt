@@ -32,8 +32,8 @@ STATE OF THE WORLD RIGHT NOW
   surface     `oko-display` serves surfaces on a TTY; `oko-preview --socket`
               pushes a Servo render into it. End-to-end verified with no
               DISPLAY/WAYLAND. TTY input is raw, parsed and focus-routed
-              (ADR 0008); evdev/wscons, pointer and a secure-attention key are
-              next.
+              (ADR 0008); Ctrl-] leaves the server before routing. evdev/wscons,
+              pointer and a lock/SAK are next.
   preview     `oko-preview <url> [cols] [rows]`: Servo -> BMP -> Frame ->
               ANSI on the current TTY. Works with no DISPLAY/WAYLAND.
               Hazard: `ulimit -v` makes Servo exit 101; use a timeout.

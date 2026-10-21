@@ -32,10 +32,12 @@ surface.**
   their ASCII value; terminal-only keys use the reserved 0x100 range.
 - Raw mode is a guard: it saves termios and restores it on drop. Ctrl-C is a
   key in raw mode, not a signal, and the app decides what it means.
-- The server must reserve a secure-attention key before the input route. That
-  key is not implemented yet; until it is, a full-screen app can hold the
-  console. A VT switch (Linux Ctrl-Alt-F2) remains the kernel-level escape, and
-  a fallback getty on another VT is part of the install.
+- The server reserves `Ctrl-]` before the input route. It stops the display
+  server and returns to the session/login, so a full-screen app cannot capture
+  the console. This is an escape, not a lock screen. A true secure-attention
+  key and lock surface remain future work. A VT switch (Linux Ctrl-Alt-F2)
+  remains the kernel-level escape, and a fallback getty on another VT is part
+  of the install.
 - The line console in `oko-session` is the fallback: when no display server is
   running, it owns stdin directly. That is the recovery path, not the normal
   path.
@@ -56,9 +58,9 @@ surface.**
 
 - Terminal apps must handle key sequences; the PTY's line discipline handles
   line editing for the shell after the bytes arrive.
-- The server needs a stop/lock path that is not a normal key. `oko-display`
-  currently has none; it is stopped with a signal. The secure-attention key is
-  the next security decision, not polish.
+- `Ctrl-]` stops `oko-display`; it is not routed to the focused app. A lock
+  screen and a configurable secure-attention chord are the next security
+  decision, not polish.
 - evdev and wscons adapters push the same `InputEvent`s into the same channel;
   the session and the wire do not change.
 - Pointer input is in the vocabulary and the wire, but no pointer source is
