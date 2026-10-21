@@ -43,6 +43,9 @@ impl<W: Write> Presenter for TerminalPresenter<W> {
                 got: (frame.width, frame.height),
             });
         }
+        // Home the cursor so a live server overwrites its last frame instead of
+        // appending to it. The last row gets no newline, which would scroll.
+        write!(self.out, "\x1b[H").map_err(|e| PresenterError::Io(e.to_string()))?;
         for row in 0..self.rows {
             for col in 0..self.cols {
                 let (x0, x1) = span(col, self.cols, frame.width);
@@ -57,7 +60,9 @@ impl<W: Write> Presenter for TerminalPresenter<W> {
                 )
                 .map_err(|e| PresenterError::Io(e.to_string()))?;
             }
-            writeln!(self.out, "\x1b[0m").map_err(|e| PresenterError::Io(e.to_string()))?;
+            let separator = if row + 1 < self.rows { "\n" } else { "" };
+            write!(self.out, "\x1b[0m{}", separator)
+                .map_err(|e| PresenterError::Io(e.to_string()))?;
         }
         Ok(())
     }

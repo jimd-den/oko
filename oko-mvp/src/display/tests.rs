@@ -141,12 +141,20 @@ fn a_top_and_bottom_pixel_become_one_half_block() {
 }
 
 #[test]
-fn one_line_per_terminal_row() {
+fn rows_are_separated_by_one_newline() {
     let frame = Frame::new(2, 4);
     let mut presenter = TerminalPresenter::new(Vec::new(), 1, 2);
     presenter.present(&frame).unwrap();
     let out = String::from_utf8(presenter.into_inner()).unwrap();
-    assert_eq!(out.matches('\n').count(), 2);
+    assert_eq!(out.matches('\n').count(), 1);
+}
+
+#[test]
+fn a_frame_starts_at_the_home_position() {
+    let mut presenter = TerminalPresenter::new(Vec::new(), 1, 1);
+    presenter.present(&Frame::new(1, 2)).unwrap();
+    let out = String::from_utf8(presenter.into_inner()).unwrap();
+    assert!(out.starts_with("\x1b[H"), "output was {:?}", out);
 }
 
 #[test]

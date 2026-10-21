@@ -36,6 +36,7 @@ pub enum ServerMessage {
     Committed { id: SurfaceId },
     Destroyed { id: SurfaceId },
     Focused { id: Option<SurfaceId> },
+    Error { reason: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

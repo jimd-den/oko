@@ -116,7 +116,7 @@ fn input_goes_to_the_focused_surface() {
 
 #[test]
 fn no_focus_means_no_input() {
-    let mut session = session();
+    let session = session();
     let event = InputEvent::Pointer {
         x: 0,
         y: 0,

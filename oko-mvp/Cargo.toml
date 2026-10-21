@@ -74,6 +74,10 @@ name = "at023_getty_delegates_login"
 path = "tests/acceptance/at023_getty_delegates_login.rs"
 
 [[test]]
+name = "at024_surface_server"
+path = "tests/acceptance/at024_surface_server.rs"
+
+[[test]]
 name = "meta_line_budget"
 path = "tests/meta/line_budget.rs"
 

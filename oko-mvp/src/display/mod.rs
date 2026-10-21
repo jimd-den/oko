@@ -12,12 +12,15 @@
 pub mod bmp;
 pub mod compositor;
 pub mod fb;
+mod format;
 #[cfg(target_os = "linux")]
 pub mod fbdev;
 pub mod presenter;
 pub mod protocol;
+pub mod server;
 pub mod session;
 pub mod surface;
+pub mod wire;
 pub mod terminal;
 
 pub use bmp::{decode_bmp, BmpError};
@@ -37,5 +40,7 @@ mod tests;
 mod session_tests;
 #[cfg(test)]
 mod fb_tests;
+#[cfg(test)]
+mod wire_tests;
 #[cfg(all(test, target_os = "linux"))]
 mod fbdev_tests;

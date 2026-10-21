@@ -25,9 +25,13 @@ STATE OF THE WORLD RIGHT NOW
               Display core: 15 targeted tests green; cargo check/clippy --lib
               green under a 1.2 GB cap. Full gate deferred (container RAM).
   display     src/display: Surface, Compositor, Presenter, HeadlessPresenter,
-              TerminalPresenter (truecolor ANSI half blocks). Pure, no deps,
-              no device. ADR 0005. Servo renders offscreen with no DISPLAY:
-              measured ~1 s for 320x200, llvmpipe; first cold run can hang.
+              TerminalPresenter (truecolor ANSI half blocks), FramebufferPresenter,
+              Linux fbdev, typed surface protocol and a Unix-socket server.
+              ADR 0005/0007. Servo renders offscreen with no DISPLAY: measured
+              ~1 s for 320x200, llvmpipe; first cold run can hang.
+  surface     `oko-display` serves surfaces on a TTY; `oko-preview --socket`
+              pushes a Servo render into it. End-to-end verified with no
+              DISPLAY/WAYLAND. Input pump and multi-client are next.
   preview     `oko-preview <url> [cols] [rows]`: Servo -> BMP -> Frame ->
               ANSI on the current TTY. Works with no DISPLAY/WAYLAND.
               Hazard: `ulimit -v` makes Servo exit 101; use a timeout.
