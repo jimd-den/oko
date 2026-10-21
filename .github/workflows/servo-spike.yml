@@ -16,7 +16,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential clang cmake pkg-config \
-            zlib1g-dev libfontconfig1-dev libfreetype6-dev
+            zlib1g-dev libfontconfig1-dev libfreetype6-dev \
+            libegl1 libegl-dev libgles2 libgl1-mesa-dri
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            oko-mvp/spikes/servo-embed/target
+          key: servo-spike-${{ runner.os }}-${{ hashFiles('oko-mvp/spikes/servo-embed/Cargo.toml', 'oko-mvp/spikes/servo-embed/src/**') }}
+          restore-keys: |
+            servo-spike-${{ runner.os }}-
 
       - uses: dtolnay/rust-toolchain@stable
 
@@ -28,6 +39,9 @@ jobs:
           RUSTFLAGS: "-C debuginfo=0"
           DISPLAY: ""
           WAYLAND_DISPLAY: ""
+          EGL_PLATFORM: surfaceless
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
         run: cargo run --release
 
       - uses: actions/upload-artifact@v4
