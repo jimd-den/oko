@@ -60,8 +60,9 @@ TRAPS
   huge and puts web content in the terminal process.
 - Do not use `ulimit -v` around Servo itself: the prebuilt reserves address
   space and exits 101. Use the process timeout.
-- `take_screenshot` waits for load and is not a per-frame API. For live frames,
-  paint and read_to_image on notify_new_frame_ready; use take_screenshot for
-  the first frame and for tests.
+- `take_screenshot` waits for load but still needs the embedder's paint loop;
+  with an empty `notify_new_frame_ready` it timed out on CI. For live frames,
+  paint and read_to_image on notify_new_frame_ready; use take_screenshot only
+  after the paint loop is working, and for tests.
 - The embedder is zone C. It must not receive host capabilities because it
   displays a page.
