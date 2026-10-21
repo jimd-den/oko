@@ -33,6 +33,10 @@ STATE OF THE WORLD RIGHT NOW
               Hazard: `ulimit -v` makes Servo exit 101; use a timeout.
   console     systemd --user unit `oko-web`, active, 0.0.0.0:8099
               http://localhost:8099/apps/computer.html
+  session     `oko-session`: unprivileged line console on stdin/stdout, no
+              display server. `oko-getty`: validates a username and execs
+              `login -p`; packaging examples for Linux/FreeBSD/OpenBSD.
+              ADR 0006. Set oko-session as the user's shell.
   engine      servo 0.7.0-aac43a3f3, state ready, binary at
               third_party/engines/servo/servoshell (installed, digest verified)
               Servo is the ONLY engine in the build; Blink scaffolding removed
@@ -49,8 +53,12 @@ STATE OF THE WORLD RIGHT NOW
 ORDER (dependencies are real, not preferences)
 ----------------------------------------------
   0. display server               ADR 0005. Surface/compositor/presenter core
-                                  landed. Next: wire a presenter to a session and
-                                  add the surface protocol + input.
+                                  and the typed surface protocol + focus/input
+                                  landed. Next: the socket transport and a real
+                                  framebuffer/DRM presenter.
+  0b. getty/session               text path landed (ADR 0006): oko-getty ->
+                                  login -> oko-session. Themed PAM login stays
+                                  ADR 0002, later.
   1. 01-embedder-devtools.txt     THE HINGE for live web surfaces.
   2. 03-terminal-grid.txt         small, self-contained, finishes #5, visible win
   3. 02-surface-frame-streaming.txt   needs 1. Also lands #1 (DRM) on real hardware

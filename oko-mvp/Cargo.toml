@@ -66,6 +66,14 @@ name = "at005_host_api_capability_enforcement"
 path = "tests/acceptance/at005_host_api_capability_enforcement.rs"
 
 [[test]]
+name = "at021_session_console"
+path = "tests/acceptance/at021_session_console.rs"
+
+[[test]]
+name = "at023_getty_delegates_login"
+path = "tests/acceptance/at023_getty_delegates_login.rs"
+
+[[test]]
 name = "meta_line_budget"
 path = "tests/meta/line_budget.rs"
 

@@ -3,6 +3,10 @@ TASK 4 — PAM: the console authenticates, the screen does not decide
 Status: DECIDED (docs/adr/0002), NOT STARTED.  Independent of TASKS 1-3.
 Security work: do it slowly, and do not delegate it.
 
+BOOT-PATH UPDATE (docs/adr/0006): the bare TTY path now delegates auth to the
+system `login`; `oko-getty` never sees a password. This task is now for a
+themed graphical login, not for making the machine boot.
+
 THE DECISION, IN ONE LINE
 -------------------------
 Policy is native and unthemeable, privilege is one small socket helper, and the

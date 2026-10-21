@@ -16,13 +16,10 @@
 mod cli;
 
 use cli::Options;
-use oko_core::adapters::{linux_process::LinuxProcessAdapter, portable_pty::PortablePtyAdapter};
-use oko_core::application::session_service::SessionService;
 use oko_core::browser::adapters::select;
-use oko_core::domain::capability::{Capability, CapabilityPolicy};
+use oko_core::host;
 use oko_core::ipc::http::HttpUiServer;
 use oko_core::ipc::server::{Core, IpcServer};
-use oko_core::ports::terminal::TerminalPort;
 use std::path::{Path, PathBuf};
 
 fn main() {
@@ -40,13 +37,7 @@ fn main() {
         std::process::exit(cli::install_engine(&workspace_root, &options.engine));
     }
 
-    let core = Core::new(
-        Box::new(LinuxProcessAdapter::new()),
-        Box::new(PortablePtyAdapter::new()) as Box<dyn TerminalPort>,
-        SessionService::new(),
-        policy(),
-        select::engine_for(&options.engine, &workspace_root),
-    );
+    let core = host::core(&workspace_root, &options.engine);
 
     println!("oko-host v0.3.0 (slice 3: terminal and web panes in one desktop)");
     println!("engine: {}", options.engine);
@@ -96,16 +87,4 @@ fn serve_ui(core: Core, options: &Options, workspace_root: &Path) -> Result<(), 
         let _ = process.stop();
     }
     outcome
-}
-
-/// The capabilities a desktop session holds (SRD §8.3).
-fn policy() -> CapabilityPolicy {
-    CapabilityPolicy::new()
-        .with(Capability::ProcessSpawn)
-        .with(Capability::BrowserNavigate)
-        .with(Capability::GraphicsCreate)
-        .with(Capability::FilesystemRead)
-        .with(Capability::FilesystemWrite)
-        .with(Capability::SystemConfigure)
-        .with(Capability::TerminalCreate)
 }

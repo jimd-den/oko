@@ -1,0 +1,3 @@
+# /etc/ttys excerpt. Keep one system getty as the fallback.
+ttyC0 "/usr/local/bin/oko-getty --tty /dev/ttyC0" vt220 on secure
+ttyC1 "/usr/libexec/getty std.9600" vt220 on secure

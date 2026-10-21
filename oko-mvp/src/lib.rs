@@ -10,6 +10,7 @@ pub mod browser;
 pub mod display;
 pub mod domain;
 pub mod graphics;
+pub mod host;
 pub mod ipc;
 pub mod ports;
 

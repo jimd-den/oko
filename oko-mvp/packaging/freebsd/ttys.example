@@ -1,0 +1,3 @@
+# /etc/ttys excerpt. Keep one system getty as the fallback.
+ttyv0 "/usr/local/bin/oko-getty --tty /dev/ttyv0" xterm-256color on secure
+ttyv1 "/usr/libexec/getty Pc" cons25 on secure
