@@ -5,7 +5,7 @@
 //! and refuses a commit whose payload is not exactly `width * height * 4`.
 
 use super::format::{read_frame, write_frame, Kind};
-use super::protocol::{ClientMessage, ServerMessage};
+use super::protocol::{ClientMessage, InputEvent, ServerMessage};
 use super::surface::{Frame, SurfaceId};
 use std::io::{Read, Write};
 
@@ -73,6 +73,10 @@ pub fn read_server<R: Read>(reader: &mut R) -> Result<Option<ServerMessage>, Str
         Kind::Error => Ok(Some(ServerMessage::Error {
             reason: String::from_utf8_lossy(&raw.payload).into_owned(),
         })),
+        Kind::Input => Ok(Some(ServerMessage::Input {
+            id,
+            event: decode_input(&raw.payload)?,
+        })),
         other => Err(format!("server sent client kind {:?}", other)),
     }
 }
@@ -91,8 +95,59 @@ pub fn write_server<W: Write>(writer: &mut W, message: &ServerMessage) -> Result
         ServerMessage::Focused { id } => {
             write_frame(writer, Kind::Focused, id.map_or(0, |id| id.0), 0, 0, &[])
         }
+        ServerMessage::Input { id, event } => {
+            write_frame(writer, Kind::Input, id.0, 0, 0, &encode_input(event))
+        }
         ServerMessage::Error { reason } => {
             write_frame(writer, Kind::Error, 0, 0, 0, reason.as_bytes())
         }
+    }
+}
+
+fn encode_input(event: &InputEvent) -> Vec<u8> {
+    match event {
+        InputEvent::Key { code, pressed } => {
+            let mut out = vec![1u8];
+            out.extend_from_slice(&code.to_le_bytes());
+            out.push(*pressed as u8);
+            out
+        }
+        InputEvent::Pointer { x, y, buttons } => {
+            let mut out = vec![2u8];
+            out.extend_from_slice(&x.to_le_bytes());
+            out.extend_from_slice(&y.to_le_bytes());
+            out.extend_from_slice(&buttons.to_le_bytes());
+            out
+        }
+        InputEvent::Focus { focused } => vec![3u8, *focused as u8],
+        InputEvent::Resize { width, height } => {
+            let mut out = vec![4u8];
+            out.extend_from_slice(&width.to_le_bytes());
+            out.extend_from_slice(&height.to_le_bytes());
+            out
+        }
+    }
+}
+
+fn decode_input(payload: &[u8]) -> Result<InputEvent, String> {
+    match payload.first() {
+        Some(1) if payload.len() == 6 => Ok(InputEvent::Key {
+            code: u32::from_le_bytes(payload[1..5].try_into().unwrap()),
+            pressed: payload[5] != 0,
+        }),
+        Some(2) if payload.len() == 13 => Ok(InputEvent::Pointer {
+            x: i32::from_le_bytes(payload[1..5].try_into().unwrap()),
+            y: i32::from_le_bytes(payload[5..9].try_into().unwrap()),
+            buttons: u32::from_le_bytes(payload[9..13].try_into().unwrap()),
+        }),
+        Some(3) if payload.len() == 2 => Ok(InputEvent::Focus {
+            focused: payload[1] != 0,
+        }),
+        Some(4) if payload.len() == 9 => Ok(InputEvent::Resize {
+            width: u32::from_le_bytes(payload[1..5].try_into().unwrap()),
+            height: u32::from_le_bytes(payload[5..9].try_into().unwrap()),
+        }),
+        Some(tag) => Err(format!("bad input event {} with {} bytes", tag, payload.len())),
+        None => Err("empty input payload".into()),
     }
 }

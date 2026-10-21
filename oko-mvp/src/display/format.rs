@@ -21,6 +21,7 @@ pub(super) enum Kind {
     Destroyed = 6,
     Focused = 7,
     Error = 8,
+    Input = 9,
 }
 
 impl Kind {
@@ -34,6 +35,7 @@ impl Kind {
             6 => Ok(Self::Destroyed),
             7 => Ok(Self::Focused),
             8 => Ok(Self::Error),
+            9 => Ok(Self::Input),
             other => Err(format!("unknown frame kind {}", other)),
         }
     }

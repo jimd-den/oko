@@ -78,6 +78,10 @@ name = "at024_surface_server"
 path = "tests/acceptance/at024_surface_server.rs"
 
 [[test]]
+name = "at025_input_routing"
+path = "tests/acceptance/at025_input_routing.rs"
+
+[[test]]
 name = "meta_line_budget"
 path = "tests/meta/line_budget.rs"
 

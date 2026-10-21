@@ -36,6 +36,7 @@ pub enum ServerMessage {
     Committed { id: SurfaceId },
     Destroyed { id: SurfaceId },
     Focused { id: Option<SurfaceId> },
+    Input { id: SurfaceId, event: InputEvent },
     Error { reason: String },
 }
 

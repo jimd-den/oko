@@ -79,6 +79,36 @@ fn an_unknown_kind_is_refused() {
 }
 
 #[test]
+fn a_key_input_round_trips() {
+    let message = ServerMessage::Input {
+        id: SurfaceId(3),
+        event: super::protocol::InputEvent::Key {
+            code: 0x41,
+            pressed: true,
+        },
+    };
+    let mut bytes = Vec::new();
+    write_server(&mut bytes, &message).unwrap();
+    assert_eq!(
+        read_server(&mut Cursor::new(bytes)).unwrap(),
+        Some(message)
+    );
+}
+
+#[test]
+fn an_unknown_input_tag_is_refused() {
+    let mut header = [0u8; 26];
+    header[0..4].copy_from_slice(b"OKOD");
+    header[4] = 1;
+    header[5] = 9;
+    header[6..14].copy_from_slice(&1u64.to_le_bytes());
+    header[22..26].copy_from_slice(&2u32.to_le_bytes());
+    let mut bytes = header.to_vec();
+    bytes.extend_from_slice(&[99, 0]);
+    assert!(read_server(&mut Cursor::new(bytes)).is_err());
+}
+
+#[test]
 fn a_server_error_carries_its_reason() {
     let message = ServerMessage::Error {
         reason: "unknown surface 4".into(),

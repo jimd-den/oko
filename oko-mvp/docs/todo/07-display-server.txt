@@ -20,6 +20,9 @@ half blocks showed the page and its orange heading.
 WHAT WORKS NOW
 --------------
   src/display/wire.rs: 26-byte header + raw RGBA, versioned, 32 MiB payload cap.
+  src/display/input.rs + terminal_input.rs: raw TTY, key parser, focus-routed
+      InputEvent frames. 8 parser tests; at025 proves a key reaches only the
+      focused surface. Secure-attention key is still missing (ADR 0008).
   src/display/server.rs: Unix-socket surface server; Commit composites and
       presents; one connection at a time.
   oko-display: the server on the current TTY (terminal presenter).
@@ -39,12 +42,10 @@ WHAT WORKS NOW
 
 WHAT IS MISSING, IN ORDER
 -------------------------
-1. Input transport. The wire vocabulary has input frames, and
-   DisplaySession::dispatch_input routes to the focused surface, but no evdev,
-   wscons, terminal or socket input pump is wired. This is the next piece of
-   the display server contract.
-   Multi-client scheduling and shared-memory/damage frames are the performance
-   follow-ups to the one-connection, full-frame v1.
+1. More input sources. The TTY input source is wired and focus-routed. Next:
+   evdev (Linux/FreeBSD) and wscons (OpenBSD/NetBSD), pointer input, and the
+   secure-attention key. Multi-client scheduling and shared-memory/damage
+   frames are the performance follow-ups to the one-connection, full-frame v1.
    Decide the frame transport before coding: full RGBA per commit is 4 MB at
    1280x800. Local: shared memory (memfd/shm) or damage rectangles. Remote:
    tiles or compression.

@@ -8,9 +8,10 @@
 //! time, no input pump yet, and a terminal presenter. The surface contract is
 //! the same one a framebuffer or browser-canvas presenter will serve.
 
-use oko_core::display::server::serve_unix;
+use oko_core::display::server::{serve_unix, serve_unix_with_input};
 use oko_core::display::session::DisplaySession;
 use oko_core::display::terminal::TerminalPresenter;
+use oko_core::display::TerminalInput;
 use std::path::{Path, PathBuf};
 
 const USAGE: &str = "usage: oko-display [--socket <path>] [--width <px>] [--height <px>] [--cols <n>] [--rows <n>]";
@@ -43,15 +44,20 @@ fn run(options: &Options) -> Result<(), String> {
     let _guard = SocketGuard(options.socket.clone());
     let presenter = TerminalPresenter::new(std::io::stdout(), options.cols, options.rows);
     let mut session = DisplaySession::new(options.width, options.height, presenter);
+    let input = TerminalInput::spawn().ok();
     eprintln!(
-        "oko-display: {} ({}x{}, {}x{} cells), Ctrl-C to stop",
+        "oko-display: {} ({}x{}, {}x{} cells), input {}",
         options.socket.display(),
         options.width,
         options.height,
         options.cols,
-        options.rows
+        options.rows,
+        if input.is_some() { "raw tty" } else { "unavailable" }
     );
-    serve_unix(&options.socket, &mut session)
+    match &input {
+        Some(input) => serve_unix_with_input(&options.socket, &mut session, input.receiver()),
+        None => serve_unix(&options.socket, &mut session),
+    }
 }
 
 /// Refuse a regular file, replace a stale socket. The path is user-chosen; a
