@@ -16,6 +16,12 @@ This is a spike, not a production client. It is not a workspace member of
 should come from the prebuilt `mozjs` archive; it does not need a source build
 when the archive is available.
 
+## CI
+
+`.github/workflows/servo-spike.yml` is a manual `workflow_dispatch` job that
+builds this spike on `ubuntu-24.04` and uploads `frame.ppm`. Use it instead of a
+small container. The runner has more RAM than the 2.7 GB development host.
+
 ## Host requirement
 
 The build is large. On the 2.7 GB development container, `cargo check` aborts

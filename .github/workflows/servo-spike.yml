@@ -1,0 +1,45 @@
+name: servo-spike
+
+# Manual only: the spike builds the full Servo crate, which is too heavy for
+# every push. Run it when validating the live-web embedder (ADR 0009).
+on:
+  workflow_dispatch:
+
+jobs:
+  headless-frame:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang cmake pkg-config \
+            zlib1g-dev libfontconfig1-dev libfreetype6-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Check the embedding API
+        working-directory: oko-mvp/spikes/servo-embed
+        env:
+          CARGO_BUILD_JOBS: 2
+          CARGO_PROFILE_DEV_DEBUG: 0
+          RUSTFLAGS: "-C debuginfo=0"
+        run: cargo check
+
+      - name: Render a frame with no display server
+        working-directory: oko-mvp/spikes/servo-embed
+        env:
+          CARGO_BUILD_JOBS: 2
+          CARGO_PROFILE_DEV_DEBUG: 0
+          RUSTFLAGS: "-C debuginfo=0"
+          DISPLAY: ""
+          WAYLAND_DISPLAY: ""
+        run: cargo run --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: servo-frame
+          path: oko-mvp/spikes/servo-embed/frame.ppm
+          if-no-files-found: error
