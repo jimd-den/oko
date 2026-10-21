@@ -49,3 +49,15 @@ jobs:
           name: servo-frame
           path: oko-mvp/spikes/servo-embed/frame.ppm
           if-no-files-found: error
+
+      # Save the target even when the run step fails, so iterating on the
+      # spike does not rebuild fourteen minutes of Servo every time.
+      - name: Save build cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            oko-mvp/spikes/servo-embed/target
+          key: servo-spike-${{ runner.os }}-${{ hashFiles('oko-mvp/spikes/servo-embed/Cargo.toml', 'oko-mvp/spikes/servo-embed/src/**') }}
