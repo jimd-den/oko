@@ -75,6 +75,15 @@ spike itself:
 Those are fixed. This confirms the build is feasible on a normal runner and the
 2.7 GB development container is the outlier, not the crate.
 
+Run 39529795104 then built the release binary in **14m33s** and started it. It
+panicked because the runner image had no `libEGL`:
+
+    surfman ... Unable to load the libEGL shared object
+
+The workflow now installs `libegl1`, `libegl-dev`, `libgles2` and
+`libgl1-mesa-dri`, sets `EGL_PLATFORM=surfaceless`, and forces llvmpipe. This is
+a runtime dependency of the software context, not an API error.
+
 ## Conclusion
 
 The API is viable, and a normal CI runner can build it. This container cannot

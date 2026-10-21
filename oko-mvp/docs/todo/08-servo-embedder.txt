@@ -1,8 +1,10 @@
 TASK 8 — A live Servo embedder as a separate process
 =====================================================
 Status: API VALIDATED, CI BUILD PROVEN, FRAME RENDER PENDING. Design:
-docs/adr/0009. Spike: spikes/servo-embed. The full Servo graph compiles on an
-ubuntu-24.04 runner; the 2.7 GB container aborts in stylo under 2.4 GB.
+docs/adr/0009. Spike: spikes/servo-embed. The full Servo graph builds on an
+ubuntu-24.04 runner in about 14 minutes; the 2.7 GB container aborts in stylo
+under 2.4 GB. The runner needed Mesa/EGL at runtime; the workflow now installs
+it and forces surfaceless llvmpipe.
 
 WHAT IS CERTAIN
 ---------------
