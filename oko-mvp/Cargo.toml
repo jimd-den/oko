@@ -27,6 +27,9 @@ path = "src/main.rs"
 alacritty_terminal = "0.26"
 # wezterm's PTY crate: the real adapter behind TerminalPort.
 portable-pty = "0.8"
+# Platform bindings for the framebuffer presenter (ioctl/mmap). A platform API
+# binding, not a framework: no runtime, no background state.
+libc = "0.2"
 
 [dev-dependencies]
 

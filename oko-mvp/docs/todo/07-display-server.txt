@@ -19,6 +19,11 @@ half blocks showed the page and its orange heading.
 
 WHAT WORKS NOW
 --------------
+  src/display/fb.rs: FramebufferPresenter over a FramebufferDevice, with
+      RGBA8888/BGRA8888/RGB565 conversion and device stride. MemoryFramebuffer
+      tests it without a device.
+  src/display/fbdev.rs: LinuxFbdev over /dev/fb0 (ioctl + mmap). Compiles on
+      Linux; NOT verified on hardware here (this machine has no /dev/fb0).
   oko-preview <url> [cols] [rows]
       Servo -> BMP -> Frame -> TerminalPresenter on the current TTY.
       Verified with DISPLAY and WAYLAND_DISPLAY unset, 40x12 cells.
@@ -27,9 +32,11 @@ WHAT WORKS NOW
 
 WHAT IS MISSING, IN ORDER
 -------------------------
-1. A surface protocol. An app process connects to the host, creates a surface,
-   commits frames and receives input. Type and version the messages; the host
-   already has a typed message layer. Start over a Unix socket on loopback.
+1. A surface protocol. The typed in-process vocabulary landed in
+   src/display/protocol.rs and src/display/session.rs: Create/Commit/Destroy,
+   focus and input routing, size and ownership checks. What is missing is the
+   transport. An app process connects to the host and sends these messages;
+   start over a Unix socket on loopback.
    Decide the frame transport before coding: full RGBA per commit is 4 MB at
    1280x800. Local: shared memory (memfd/shm) or damage rectangles. Remote:
    tiles or compression.
@@ -39,8 +46,9 @@ WHAT IS MISSING, IN ORDER
 3. Wire a session to a presenter. The first honest end to end:
    Servo -> BMP/RGBA -> Frame -> TerminalPresenter on a real TTY. Then the same
    frame through a framebuffer presenter.
-4. Framebuffer presenter. Linux /dev/fb0 and FreeBSD vt(4) first; OpenBSD
-   wscons next. No GPU, no display server. Keep it behind Presenter.
+4. Framebuffer presenter. The portable presenter and Linux /dev/fb0 adapter
+   are in. Next: FreeBSD vt(4), then OpenBSD wscons; both need their own ioctl
+   adapters. Verify each on hardware before claiming support.
 5. DRM/KMS presenter on Linux when the framebuffer is too slow.
 6. Live web surfaces. Servo's --devtools server binds without a display, but it
    speaks a length-prefixed protocol, not HTTP /json. Find the framing and the

@@ -69,3 +69,12 @@ version = "0.8.0"
 license = "MIT"
 pinned_by = "Cargo.lock"
 why = "The planned adapter swap behind the existing port trait (ADR 0001)"
+
+[libc]
+component = "libc"
+upstream_project = "rust-lang/libc"
+role = "Platform bindings for the framebuffer presenter (ioctl, mmap)"
+version = "0.2.191"
+license = "MIT OR Apache-2.0"
+pinned_by = "Cargo.lock"
+why = "A framebuffer presenter needs mmap and a handful of ioctl constants; this is the audited binding, not a framework"

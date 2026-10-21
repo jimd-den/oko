@@ -68,6 +68,19 @@ impl Surface {
         ])
     }
 
+    /// Replace the pixels from a committed frame.
+    ///
+    /// Contract: the frame must match the surface's size. A mismatch is
+    /// refused, because resizing an app's surface without its knowledge is a
+    /// protocol error, not a display decision.
+    pub fn replace_frame(&mut self, frame: &Frame) -> bool {
+        if frame.width != self.width || frame.height != self.height {
+            return false;
+        }
+        self.pixels.copy_from_slice(&frame.pixels);
+        true
+    }
+
     /// Fill the whole surface with one RGBA value.
     pub fn clear(&mut self, rgba: [u8; 4]) {
         for i in (0..self.pixels.len()).step_by(4) {

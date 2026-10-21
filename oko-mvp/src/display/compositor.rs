@@ -63,6 +63,10 @@ impl Compositor {
         &self.surfaces
     }
 
+    pub fn surfaces_mut(&mut self) -> &mut [Surface] {
+        &mut self.surfaces
+    }
+
     /// Compose the scene into a new frame.
     pub fn composite(&self) -> Frame {
         let mut frame = Frame::new(self.width, self.height);

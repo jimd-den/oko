@@ -11,15 +11,31 @@
 
 pub mod bmp;
 pub mod compositor;
+pub mod fb;
+#[cfg(target_os = "linux")]
+pub mod fbdev;
 pub mod presenter;
+pub mod protocol;
+pub mod session;
 pub mod surface;
 pub mod terminal;
 
 pub use bmp::{decode_bmp, BmpError};
 pub use compositor::Compositor;
+pub use fb::{FramebufferDevice, FramebufferInfo, FramebufferPresenter, MemoryFramebuffer, PixelFormat};
+#[cfg(target_os = "linux")]
+pub use fbdev::LinuxFbdev;
 pub use presenter::{HeadlessPresenter, OutputSize, Presenter, PresenterError};
+pub use protocol::{ClientMessage, DisplayError, InputEvent, ServerMessage};
+pub use session::DisplaySession;
 pub use surface::{Frame, Surface, SurfaceId};
 pub use terminal::TerminalPresenter;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod session_tests;
+#[cfg(test)]
+mod fb_tests;
+#[cfg(all(test, target_os = "linux"))]
+mod fbdev_tests;
