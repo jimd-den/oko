@@ -1,0 +1,63 @@
+TASK 8 — A live Servo embedder as a separate process
+=====================================================
+Status: API VALIDATED, BUILD PROBE RUNNING. Design: docs/adr/0009.
+
+WHAT IS CERTAIN
+---------------
+  - servo 0.7.0 is published on crates.io (same version as the prebuilt).
+  - The crate exports SoftwareRenderingContext, OffscreenRenderingContext,
+    WindowRenderingContext, WebView, WebViewBuilder, Servo, ServoBuilder.
+  - SoftwareRenderingContext uses a surfman software adapter and needs no
+    display server. RenderingContext::read_to_image returns an RgbaImage.
+  - WebView::take_screenshot(None, cb) waits for load/layout and returns an
+    RgbaImage; WebView::paint() renders into the context.
+  - WebView::notify_input_event takes Servo InputEvent values. Keyboard input
+    is keyboard_types::KeyboardEvent; pointer input is MouseMove/MouseButton.
+  - Build probe: /home/violindocgfx/servo-probe. It depends on
+    servo 0.7.0 (no default features, bundled + js_jit), dpi 0.1, url 2.5,
+    rustls 0.23 (aws_lc_rs). cargo check runs with one job and a 2 GB cap.
+
+BUILD FACTS
+-----------
+  - The host needed zlib1g-dev: freetype-sys builds bundled libpng and could
+    not find zlib.h. Installed on 2026-10-21.
+  - mozjs 0.26.4 can link a prebuilt SpiderMonkey archive; it does not have to
+    compile SpiderMonkey from source when the prebuilt is available.
+  - Disk on this container: about 11 GB free after the probe downloads.
+    Memory: 2.7 GB total, so a full link may still fail here.
+
+THE WORK, IN ORDER
+------------------
+1. Finish the probe: cargo check, then cargo build/run, and confirm it writes
+   a frame with no DISPLAY/WAYLAND. If the link fails, record the memory
+   requirement rather than pretending the API ran.
+2. Create a separate crate (outside the default workspace) `oko-servo-embed`
+   that path-depends on oko-core for Frame, ClientMessage, ServerMessage and
+   the wire functions, and on servo 0.7.0.
+3. Wrap the engine:
+       ServoSurface::new(width, height, url)
+       ServoSurface::spin()
+       ServoSurface::frame() -> Option<Frame>
+       ServoSurface::input(InputEvent)
+   Keep the winit example's structure but replace the window context with
+   SoftwareRenderingContext and the event loop with a channel waker.
+4. Connect to oko-display: create a surface, commit each frame, read input.
+   Map our key codes to keyboard_types::Key/Code; pointer to WebViewPoint.
+5. Build/CI: pin servo = "=0.7.0", record it in toolchain/versions.lock with
+   the prebuilt mozjs policy, and keep the main make check independent.
+6. Measure: frame time and CPU at 320x200 and at 640x384 on this machine.
+   The SoftwareRenderingContext is CPU-only; this is the number that decides
+   whether live web is usable on a bare console.
+7. Only then consider starting it from oko-session.
+
+TRAPS
+-----
+- Do not add servo to oko-host's dependencies. That makes every default build
+  huge and puts web content in the terminal process.
+- Do not use `ulimit -v` around Servo itself: the prebuilt reserves address
+  space and exits 101. Use the process timeout.
+- `take_screenshot` waits for load and is not a per-frame API. For live frames,
+  paint and read_to_image on notify_new_frame_ready; use take_screenshot for
+  the first frame and for tests.
+- The embedder is zone C. It must not receive host capabilities because it
+  displays a page.
