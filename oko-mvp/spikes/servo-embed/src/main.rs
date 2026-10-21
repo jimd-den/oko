@@ -10,8 +10,8 @@ use std::sync::mpsc;
 use std::time::Duration;
 
 use servo::{
-    EventLoopWaker, ServoBuilder, SoftwareRenderingContext, WebView, WebViewBuilder,
-    WebViewDelegate,
+    EventLoopWaker, RenderingContext, ServoBuilder, SoftwareRenderingContext, WebView,
+    WebViewBuilder, WebViewDelegate,
 };
 use url::Url;
 
@@ -44,7 +44,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     servo.setup_logging();
 
     let size = dpi::PhysicalSize::new(320, 200);
-    let context = Rc::new(SoftwareRenderingContext::new(size)?);
+    let context = Rc::new(
+        SoftwareRenderingContext::new(size)
+            .map_err(|e| std::io::Error::other(format!("context: {:?}", e)))?,
+    );
     let _ = context.make_current();
 
     let url = Url::parse(
@@ -65,7 +68,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     for _ in 0..600 {
         servo.spin_event_loop();
         if let Ok(result) = shot_rx.try_recv() {
-            image = Some(result?);
+            image = Some(
+                result.map_err(|e| std::io::Error::other(format!("screenshot: {:?}", e)))?,
+            );
             break;
         }
         let _ = wake_rx.recv_timeout(Duration::from_millis(10));
