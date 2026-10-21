@@ -27,6 +27,9 @@ run_cargo() {
     # shellcheck disable=SC2086
     "$CARGO" "$subcommand" $CARGO_FLAGS "$@"
 }
+# Do not lower this to 1.2 GB: the real-PTY console tests cannot map enough
+# under that cap and fail; 1.5 GB passes. The cap protects the machine, not the
+# test's own allocation budget.
 MEM_CAP_KB="${MEM_CAP_KB:-1500000}" # address space cap per test run (KB)
 
 : >"$LOG"
