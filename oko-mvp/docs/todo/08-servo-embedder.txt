@@ -1,6 +1,8 @@
 TASK 8 — A live Servo embedder as a separate process
 =====================================================
-Status: API VALIDATED, BUILD PROBE RUNNING. Design: docs/adr/0009.
+Status: API VALIDATED, HOST BUILD BLOCKED. Design: docs/adr/0009.
+Spike: spikes/servo-embed. The 2.7 GB container aborts in stylo under 2.4 GB;
+build on a host with at least 8 GB and measure.
 
 WHAT IS CERTAIN
 ---------------
@@ -28,9 +30,9 @@ BUILD FACTS
 
 THE WORK, IN ORDER
 ------------------
-1. Finish the probe: cargo check, then cargo build/run, and confirm it writes
-   a frame with no DISPLAY/WAYLAND. If the link fails, record the memory
-   requirement rather than pretending the API ran.
+1. Run the probe on a larger host: cargo check, then cargo run, and confirm it
+   writes frame.ppm with no DISPLAY/WAYLAND. This container cannot finish
+   stylo; the exact failure is in docs/reports/servo-crate-probe.md.
 2. Create a separate crate (outside the default workspace) `oko-servo-embed`
    that path-depends on oko-core for Frame, ClientMessage, ServerMessage and
    the wire functions, and on servo 0.7.0.

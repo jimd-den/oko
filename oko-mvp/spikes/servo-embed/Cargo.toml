@@ -1,0 +1,15 @@
+[package]
+name = "oko-servo-embed-spike"
+version = "0.1.0"
+edition = "2024"
+
+# Standalone probe. It is deliberately not a workspace member of oko-mvp:
+# building Servo must not become part of the default ỌKỌ build (ADR 0009).
+#
+# Build on a host with enough RAM for `stylo` and the Servo link. This
+# container aborts in stylo under 2.4 GB of address space.
+[dependencies]
+servo = { version = "0.7.0", default-features = false, features = ["bundled", "js_jit"] }
+dpi = "0.1"
+url = "2.5"
+rustls = { version = "0.23", default-features = false, features = ["aws_lc_rs"] }
